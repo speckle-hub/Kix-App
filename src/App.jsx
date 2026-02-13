@@ -11,17 +11,15 @@ import { PitchSideFeed } from './components/PitchSideFeed'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { AnimatePresence } from 'framer-motion'
 
-function AppContent() {
+export default function App() {
   const { currentUser } = useAuth()
   const [showAuth, setShowAuth] = useState(false)
   const [isKeyboardVisible, setKeyboardVisible] = useState(false)
   const navigate = useNavigate()
 
-  // Mobile Keyboard Fix: Hide layout elements when keyboard is up
   useEffect(() => {
     const handleFocus = () => setKeyboardVisible(true)
     const handleBlur = () => setKeyboardVisible(false)
-
     window.addEventListener('focusin', handleFocus)
     window.addEventListener('focusout', handleBlur)
     return () => {
@@ -30,16 +28,11 @@ function AppContent() {
     }
   }, [])
 
-  // Redirect to matches if user is logged in
   useEffect(() => {
     if (currentUser) {
       setShowAuth(false)
-      // Only navigate to matches if they are on the root or trying to access hero
-      if (window.location.pathname === '/') {
-        navigate('/matches')
-      }
     }
-  }, [currentUser, navigate])
+  }, [currentUser])
 
   const handleGetStarted = () => {
     setShowAuth(true)
@@ -49,13 +42,13 @@ function AppContent() {
     <Layout>
       <Routes>
         <Route path="/" element={
-          !currentUser ? <Hero onGetStarted={handleGetStarted} onLogin={() => setShowAuth(true)} /> : <Navigate to="/matches" />
+          !currentUser ? <Hero onGetStarted={handleGetStarted} onLogin={() => setShowAuth(true)} /> : <Navigate to="/matches" replace />
         } />
         <Route path="/matches" element={<MatchFeed />} />
         <Route path="/squads" element={<SquadsPage />} />
         <Route path="/feed" element={<PitchSideFeed onNavigateToProfile={() => navigate('/profile')} />} />
         <Route path="/profile" element={<ProfilePage />} />
-        <Route path="*" element={<Navigate to="/" />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
 
       {currentUser && !isKeyboardVisible && (
@@ -64,13 +57,13 @@ function AppContent() {
 
       {/* Visual Debug Mode overlay for setup errors */}
       {!import.meta.env.VITE_FIREBASE_API_KEY && (
-        <div className="fixed top-0 left-0 right-0 bg-red-600 text-white text-[10px] font-bold py-1 px-4 text-center z-[100] uppercase tracking-tighter">
-          Debug: Firebase API Key Missing (Check Vercel Env Vars)
+        <div className="fixed top-0 left-0 right-0 bg-red-600 text-white text-[10px] font-bold py-1 px-4 text-center z-[100] uppercase tracking-tighter pointer-events-none">
+          Debug: Firebase API Key Missing
         </div>
       )}
 
       <AnimatePresence>
-        {showAuth && (
+        {showAuth && !currentUser && (
           <AuthModal
             isOpen={showAuth}
             onClose={() => setShowAuth(false)}
@@ -80,15 +73,3 @@ function AppContent() {
     </Layout>
   )
 }
-
-function App() {
-  return (
-    <BrowserRouter>
-      <AuthProvider>
-        <AppContent />
-      </AuthProvider>
-    </BrowserRouter>
-  )
-}
-
-export default App
