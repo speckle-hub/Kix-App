@@ -8,6 +8,7 @@ import { ProfilePage } from './components/ProfilePage'
 import { SquadsPage } from './components/SquadsPage'
 import { PitchSideFeed } from './components/PitchSideFeed'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
+import { AnimatePresence } from 'framer-motion'
 
 function AppContent() {
   const { currentUser } = useAuth()
@@ -76,10 +77,14 @@ function AppContent() {
         </div>
       )}
 
-      <AuthModal
-        isOpen={showAuth}
-        onClose={() => setShowAuth(false)}
-      />
+      <AnimatePresence>
+        {showAuth && (
+          <AuthModal
+            isOpen={showAuth}
+            onClose={() => setShowAuth(false)}
+          />
+        )}
+      </AnimatePresence>
     </Layout>
   )
 }

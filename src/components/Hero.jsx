@@ -30,7 +30,7 @@ export function Hero({ onGetStarted }) {
                         GET ON THE PITCH
                     </Button>
                     <button
-                        onClick={() => { }}
+                        onClick={onLogin}
                         className="text-white/40 hover:text-white transition-colors text-sm font-semibold uppercase tracking-widest"
                     >
                         Already a player? Log In
