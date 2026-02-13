@@ -46,7 +46,12 @@ export function MatchFeed() {
                 {matches.length === 0 ? (
                     <div className="text-center p-12 border-2 border-dashed border-white/5 rounded-[40px] flex flex-col items-center gap-4">
                         <p className="text-white/20 text-sm font-medium">No matches found. Create one to get started!</p>
-                        <button className="text-primary text-xs font-bold tracking-widest uppercase hover:scale-105 transition-transform">Request a Match</button>
+                        <button
+                            onClick={() => alert("Match Creation coming in the next update! Stay tuned.")}
+                            className="text-primary text-xs font-bold tracking-widest uppercase hover:scale-105 transition-transform"
+                        >
+                            Request a Match
+                        </button>
                     </div>
                 ) : (
                     matches.map(match => (

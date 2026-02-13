@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import { Layout } from './components/Layout'
 import { BottomNavbar } from './components/BottomNavbar'
 import { Hero } from './components/Hero'
@@ -12,10 +13,9 @@ import { AnimatePresence } from 'framer-motion'
 
 function AppContent() {
   const { currentUser } = useAuth()
-  const [activeTab, setActiveTab] = useState('matches')
-  const [showHero, setShowHero] = useState(true)
   const [showAuth, setShowAuth] = useState(false)
   const [isKeyboardVisible, setKeyboardVisible] = useState(false)
+  const navigate = useNavigate()
 
   // Mobile Keyboard Fix: Hide layout elements when keyboard is up
   useEffect(() => {
@@ -30,48 +30,40 @@ function AppContent() {
     }
   }, [])
 
-  // Redirect to feed if user is logged in
+  // Redirect to matches if user is logged in
   useEffect(() => {
     if (currentUser) {
-      setShowHero(false)
       setShowAuth(false)
-      setActiveTab('matches')
+      // Only navigate to matches if they are on the root or trying to access hero
+      if (window.location.pathname === '/') {
+        navigate('/matches')
+      }
     }
-  }, [currentUser])
+  }, [currentUser, navigate])
 
   const handleGetStarted = () => {
     setShowAuth(true)
   }
 
-  const renderContent = () => {
-    if (showHero && !currentUser) {
-      return <Hero onGetStarted={handleGetStarted} />
-    }
-
-    switch (activeTab) {
-      case 'matches':
-        return <MatchFeed />
-      case 'squads':
-        return <SquadsPage />
-      case 'feed':
-        return <PitchSideFeed onNavigateToProfile={() => setActiveTab('profile')} />
-      case 'profile':
-        return <ProfilePage />
-      default:
-        return <MatchFeed />
-    }
-  }
-
   return (
     <Layout>
-      {renderContent()}
+      <Routes>
+        <Route path="/" element={
+          !currentUser ? <Hero onGetStarted={handleGetStarted} onLogin={() => setShowAuth(true)} /> : <Navigate to="/matches" />
+        } />
+        <Route path="/matches" element={<MatchFeed />} />
+        <Route path="/squads" element={<SquadsPage />} />
+        <Route path="/feed" element={<PitchSideFeed onNavigateToProfile={() => navigate('/profile')} />} />
+        <Route path="/profile" element={<ProfilePage />} />
+        <Route path="*" element={<Navigate to="/" />} />
+      </Routes>
 
-      {!showHero && !isKeyboardVisible && (
-        <BottomNavbar activeTab={activeTab} setActiveTab={setActiveTab} />
+      {currentUser && !isKeyboardVisible && (
+        <BottomNavbar />
       )}
 
       {/* Visual Debug Mode overlay for setup errors */}
-      {!import.meta.env.VITE_FIREBASE_API_KEY && !showHero && (
+      {!import.meta.env.VITE_FIREBASE_API_KEY && (
         <div className="fixed top-0 left-0 right-0 bg-red-600 text-white text-[10px] font-bold py-1 px-4 text-center z-[100] uppercase tracking-tighter">
           Debug: Firebase API Key Missing (Check Vercel Env Vars)
         </div>
@@ -91,9 +83,11 @@ function AppContent() {
 
 function App() {
   return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
+    <BrowserRouter>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </BrowserRouter>
   )
 }
 
