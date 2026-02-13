@@ -12,12 +12,30 @@ const firebaseConfig = {
     measurementId: "G-8E8G6GV27J"
 };
 
-// Debug Mode for Vercel
-if (!firebaseConfig.apiKey) {
-    console.error("❌ KIX ERROR: Firebase API Key missing. Check Vercel Environment Variables!");
+// Safe Config Logging (For Debugging)
+console.log("🔧 KIX: Loading Firebase Config:", {
+    projectId: firebaseConfig.projectId,
+    authDomain: firebaseConfig.authDomain,
+    storageBucket: firebaseConfig.storageBucket,
+    apiKey: firebaseConfig.apiKey ? "***EXISTS***" : "!!! MISSING !!!"
+});
+
+// Initialize Firebase with Safeguards
+let app;
+let auth;
+let db;
+
+try {
+    console.log("🔌 KIX: Initializing Firebase...");
+    app = initializeApp(firebaseConfig);
+    auth = getAuth(app);
+    db = getFirestore(app);
+    console.log("✅ KIX: Firebase Connected Successfully");
+} catch (error) {
+    console.error("🚨 KIX ERROR: Firebase Initialization Failed!", error);
+    // Provide minimal fallbacks to prevent screen from going completely black
+    auth = {};
+    db = {};
 }
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
-export const db = getFirestore(app);
+export { auth, db };
