@@ -27,7 +27,11 @@ export function AuthModal({ isOpen, onClose, initialView = "login" }) {
             }
             onClose();
         } catch (err) {
-            setError(err.message.replace('Firebase: ', ''));
+            if (err.code === 'auth/operation-not-allowed') {
+                setError("Sign-in method not enabled. Please enable Email/Password in your Firebase Console.");
+            } else {
+                setError(err.message.replace('Firebase: ', ''));
+            }
         } finally {
             setLoading(false);
         }
@@ -36,19 +40,20 @@ export function AuthModal({ isOpen, onClose, initialView = "login" }) {
     return (
         <AnimatePresence>
             {isOpen && (
-                <>
+                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={onClose}
-                        className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[60]"
+                        className="fixed inset-0 bg-black/80 backdrop-blur-sm"
                     />
+
                     <motion.div
                         initial={{ opacity: 0, scale: 0.95, y: 20 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                        className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-[400px] bg-[#111] border border-white/10 rounded-3xl p-8 z-[70] shadow-2xl"
+                        className="relative w-full max-w-[450px] bg-[#111] border border-white/10 rounded-[32px] p-8 z-[70] shadow-2xl overflow-hidden"
                     >
                         <button
                             onClick={onClose}
@@ -153,7 +158,7 @@ export function AuthModal({ isOpen, onClose, initialView = "login" }) {
                             </button>
                         </p>
                     </motion.div>
-                </>
+                </div>
             )}
         </AnimatePresence>
     );
