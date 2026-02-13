@@ -2,6 +2,7 @@ console.log("🚀 KIX: App Execution Started...");
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
+import { AuthProvider } from './contexts/AuthContext'
 import './index.css'
 import App from './App.jsx'
 
@@ -34,9 +35,11 @@ if (!import.meta.env.VITE_FIREBASE_API_KEY) {
 } else {
   root.render(
     <StrictMode>
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>
+      <AuthProvider>
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
+      </AuthProvider>
     </StrictMode>,
   )
 }

@@ -11,7 +11,11 @@ import { auth, db } from '../lib/firebase';
 const AuthContext = createContext();
 
 export function useAuth() {
-    return useContext(AuthContext);
+    const context = useContext(AuthContext);
+    if (context === undefined) {
+        throw new Error('useAuth must be used within an AuthProvider');
+    }
+    return context;
 }
 
 export function AuthProvider({ children }) {
