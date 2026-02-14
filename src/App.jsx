@@ -51,10 +51,6 @@ export default function App() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
 
-      {currentUser && !isKeyboardVisible && (
-        <BottomNavbar />
-      )}
-
       {/* Visual Debug Mode overlay for setup errors */}
       {!import.meta.env.VITE_FIREBASE_API_KEY && (
         <div className="fixed top-0 left-0 right-0 bg-red-600 text-white text-[10px] font-bold py-1 px-4 text-center z-[100] uppercase tracking-tighter pointer-events-none">
@@ -70,6 +66,10 @@ export default function App() {
           />
         )}
       </AnimatePresence>
+
+      {currentUser && !isKeyboardVisible && (
+        <BottomNavbar />
+      )}
     </Layout>
   )
 }

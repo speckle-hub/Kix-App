@@ -11,7 +11,7 @@ const navItems = [
 
 export function BottomNavbar() {
     return (
-        <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[450px] bg-background/80 backdrop-blur-xl border-t border-white/10 px-6 py-4 flex justify-between items-center z-[9999]">
+        <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[450px] bg-background/80 backdrop-blur-xl border-t border-white/10 px-6 py-4 flex justify-between items-center z-[9999] pointer-events-auto">
             {navItems.map((item) => {
                 const Icon = item.icon;
 
