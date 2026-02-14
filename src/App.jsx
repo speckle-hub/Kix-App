@@ -8,6 +8,7 @@ import { AuthModal } from './components/AuthModal'
 import { ProfilePage } from './components/ProfilePage'
 import { SquadsPage } from './components/SquadsPage'
 import { PitchSideFeed } from './components/PitchSideFeed'
+import { NewsPage } from './components/NewsPage'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { AnimatePresence } from 'framer-motion'
 
@@ -39,17 +40,20 @@ export default function App() {
   }
 
   return (
-    <Layout>
-      <Routes>
-        <Route path="/" element={
-          !currentUser ? <Hero onGetStarted={handleGetStarted} onLogin={() => setShowAuth(true)} /> : <Navigate to="/matches" replace />
-        } />
-        <Route path="/matches" element={<MatchFeed />} />
-        <Route path="/squads" element={<SquadsPage />} />
-        <Route path="/feed" element={<PitchSideFeed onNavigateToProfile={() => navigate('/profile')} />} />
-        <Route path="/profile" element={<ProfilePage />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+    <>
+      <Layout>
+        <Routes>
+          <Route path="/" element={
+            !currentUser ? <Hero onGetStarted={handleGetStarted} onLogin={() => setShowAuth(true)} /> : <Navigate to="/matches" replace />
+          } />
+          <Route path="/matches" element={<MatchFeed />} />
+          <Route path="/squads" element={<SquadsPage />} />
+          <Route path="/news" element={<NewsPage />} />
+          <Route path="/feed" element={<PitchSideFeed onNavigateToProfile={() => navigate('/profile')} />} />
+          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Layout>
 
       {/* Visual Debug Mode overlay for setup errors */}
       {!import.meta.env.VITE_FIREBASE_API_KEY && (
@@ -70,6 +74,6 @@ export default function App() {
       {currentUser && !isKeyboardVisible && (
         <BottomNavbar />
       )}
-    </Layout>
+    </>
   )
 }

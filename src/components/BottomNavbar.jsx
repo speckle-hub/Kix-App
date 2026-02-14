@@ -1,17 +1,18 @@
-import { LayoutGrid, Users, MessageSquare, User } from "lucide-react";
+import { LayoutGrid, Users, MessageSquare, User, Newspaper } from "lucide-react";
 import { motion } from "framer-motion";
 import { NavLink } from "react-router-dom";
 
 const navItems = [
     { icon: LayoutGrid, label: "Matches", id: "matches", path: "/matches" },
     { icon: Users, label: "Squads", id: "squads", path: "/squads" },
+    { icon: Newspaper, label: "News", id: "news", path: "/news" },
     { icon: MessageSquare, label: "Feed", id: "feed", path: "/feed" },
     { icon: User, label: "Profile", id: "profile", path: "/profile" },
 ];
 
 export function BottomNavbar() {
     return (
-        <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[450px] bg-background/80 backdrop-blur-xl border-t border-white/10 px-6 py-4 flex justify-between items-center z-[9999] pointer-events-auto">
+        <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[450px] bg-background/80 backdrop-blur-xl border-t border-white/10 px-3 py-4 flex justify-between items-center z-[9999] pointer-events-auto">
             {navItems.map((item) => {
                 const Icon = item.icon;
 
