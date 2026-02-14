@@ -35,6 +35,20 @@ export default function App() {
     }
   }, [currentUser])
 
+  // Global Click Debugger
+  useEffect(() => {
+    const handleGlobalClick = (e) => {
+      console.log('🔍 KIX CLICK DEBUG:', {
+        element: e.target,
+        id: e.target.id,
+        className: e.target.className,
+        parent: e.target.parentElement?.className
+      });
+    };
+    window.addEventListener('click', handleGlobalClick, true); // Use capture phase
+    return () => window.removeEventListener('click', handleGlobalClick, true);
+  }, []);
+
   const handleGetStarted = () => {
     setShowAuth(true)
   }
