@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { Button } from "./Button";
 
-export function Hero({ onGetStarted }) {
+export function Hero({ onGetStarted, onLogin }) {
     return (
         <section className="relative h-screen flex flex-col items-center justify-center p-6 text-center overflow-hidden">
             {/* Background Glows */}
