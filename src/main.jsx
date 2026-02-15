@@ -1,35 +1,22 @@
-console.log("🚀 KIX: App Execution Started...");
-import { StrictMode } from 'react'
+import React, { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
+import { Layout } from './components/Layout'
 import './index.css'
 import App from './App.jsx'
-
-console.log("🏗️ KIX: Mounting React Root...");
 
 const root = createRoot(document.getElementById('root'));
 
 // SAFETY CHECK: Critical Environment Variables
 if (!import.meta.env.VITE_FIREBASE_API_KEY) {
-  console.error("❌ FATAL: VITE_FIREBASE_API_KEY is missing!");
   root.render(
-    <div style={{
-      backgroundColor: '#111',
-      color: '#ff4444',
-      height: '100vh',
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      fontFamily: 'monospace',
-      textAlign: 'center',
-      padding: '20px'
-    }}>
-      <h1 style={{ fontSize: '24px', marginBottom: '16px' }}>⚠️ CONFIGURATION ERROR ⚠️</h1>
-      <p>The <code>VITE_FIREBASE_API_KEY</code> is missing.</p>
-      <br />
-      <p style={{ color: '#888' }}>Please add your Environment Variables in the Vercel Dashboard.</p>
+    <div className="h-screen bg-black flex items-center justify-center p-10 text-center font-mono">
+      <div className="space-y-4">
+        <h1 className="text-red-500 text-2xl font-bold">⚠️ CONFIG ERROR ⚠️</h1>
+        <p className="text-white/60">VITE_FIREBASE_API_KEY is missing.</p>
+        <p className="text-white/20 text-xs">Add it to your environment variables.</p>
+      </div>
     </div>
   );
 } else {
@@ -37,9 +24,11 @@ if (!import.meta.env.VITE_FIREBASE_API_KEY) {
     <StrictMode>
       <AuthProvider>
         <BrowserRouter>
-          <App />
+          <Layout>
+            <App />
+          </Layout>
         </BrowserRouter>
       </AuthProvider>
-    </StrictMode>,
-  )
+    </StrictMode>
+  );
 }
