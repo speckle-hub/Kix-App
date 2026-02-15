@@ -60,7 +60,11 @@ export function ProfilePage() {
             <div className="flex justify-between items-center mb-6">
                 <h2 className="text-3xl font-condensed">Player Profile</h2>
                 <button
-                    onClick={logout}
+                    onClick={async () => {
+                        console.log("🚀 KIX: Nuclear Sign Out Triggered");
+                        await logout();
+                        window.location.href = '/';
+                    }}
                     className="text-white/20 hover:text-red-500 transition-colors flex items-center gap-2 text-xs font-bold uppercase"
                 >
                     <LogOut size={14} />

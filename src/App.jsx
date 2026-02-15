@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import { Layout } from './components/Layout'
 import { BottomNavbar } from './components/BottomNavbar'
 import { Hero } from './components/Hero'
@@ -14,6 +14,12 @@ import { AnimatePresence } from 'framer-motion'
 
 export default function App() {
   const { currentUser } = useAuth()
+  const location = useLocation()
+
+  useEffect(() => {
+    console.log(`🗺️ KIX ROUTE DEBUG: Current path is ${location.pathname}`);
+  }, [location.pathname]);
+
   const [showAuth, setShowAuth] = useState(false)
   const [isKeyboardVisible, setKeyboardVisible] = useState(false)
   const navigate = useNavigate()
