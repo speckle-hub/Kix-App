@@ -1,0 +1,139 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ─── Helpers ────────────────────────────────────────────────────────────
+    function isAuth() {
+      return request.auth != null;
+    }
+    function isOwner(uid) {
+      return request.auth.uid == uid;
+    }
+    function isMatchHost(matchData) {
+      return request.auth.uid == matchData.hostId;
+    }
+    function isParticipant(matchData) {
+      return request.auth.uid in matchData.joined_players;
+    }
+
+    // ─── Users ───────────────────────────────────────────────────────────────
+    // Users can read any profile; only write their own.
+    // XP and level are protected: only server-trusted fields can be written.
+    match /users/{userId} {
+      allow read: if isAuth();
+      allow create: if isOwner(userId);
+      // Users can update their own profile but NOT xp, level, badges, noShowCount, reliabilityScore
+      allow update: if isOwner(userId)
+        && !('xp' in request.resource.data.diff(resource.data).affectedKeys())
+        && !('level' in request.resource.data.diff(resource.data).affectedKeys())
+        && !('badges' in request.resource.data.diff(resource.data).affectedKeys())
+        && !('noShowCount' in request.resource.data.diff(resource.data).affectedKeys())
+        && !('reliabilityScore' in request.resource.data.diff(resource.data).affectedKeys());
+      allow delete: if false;
+    }
+
+    // ─── Matches ─────────────────────────────────────────────────────────────
+    match /matches/{matchId} {
+      allow read: if isAuth();
+      // Any authenticated user can create a match (they become host)
+      allow create: if isAuth()
+        && request.resource.data.hostId == request.auth.uid
+        && request.resource.data.status == 'open';
+      // Host can update anything; participants can only update joined_players, waitlist, checkedIn
+      allow update: if isAuth() && (
+        isMatchHost(resource.data)
+        || (
+          isParticipant(resource.data) || request.auth.uid in resource.data.waitlist
+        ) && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['joined_players', 'waitlist', 'checkedIn', 'spotsLeft'])
+      );
+      allow delete: if isAuth() && isMatchHost(resource.data);
+    }
+
+    // ─── Match Requests ───────────────────────────────────────────────────────
+    match /matchRequests/{requestId} {
+      allow read: if isAuth();
+      allow create: if isAuth() && request.resource.data.creatorId == request.auth.uid;
+      allow update: if isAuth() && (
+        resource.data.creatorId == request.auth.uid
+        || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['interestedPlayers'])
+      );
+      allow delete: if isAuth() && resource.data.creatorId == request.auth.uid;
+    }
+
+    // ─── Squads ───────────────────────────────────────────────────────────────
+    match /squads/{squadId} {
+      allow read: if isAuth();
+      allow create: if isAuth() && request.resource.data.ownerId == request.auth.uid;
+      allow update: if isAuth() && (
+        resource.data.ownerId == request.auth.uid
+        || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['members'])
+      );
+      allow delete: if isAuth() && resource.data.ownerId == request.auth.uid;
+
+      // Squad chat: only members can read/write
+      match /messages/{messageId} {
+        allow read: if isAuth() && request.auth.uid in get(/databases/$(database)/documents/squads/$(squadId)).data.members;
+        allow create: if isAuth()
+          && request.auth.uid in get(/databases/$(database)/documents/squads/$(squadId)).data.members
+          && request.resource.data.senderId == request.auth.uid;
+        allow delete: if isAuth() && resource.data.senderId == request.auth.uid;
+      }
+    }
+
+    // ─── Match Chat ───────────────────────────────────────────────────────────
+    match /matches/{matchId}/messages/{messageId} {
+      allow read: if isAuth()
+        && request.auth.uid in get(/databases/$(database)/documents/matches/$(matchId)).data.joined_players;
+      allow create: if isAuth()
+        && request.auth.uid in get(/databases/$(database)/documents/matches/$(matchId)).data.joined_players
+        && request.resource.data.senderId == request.auth.uid;
+      allow delete: if isAuth() && resource.data.senderId == request.auth.uid;
+    }
+
+    // ─── Posts (PitchSide Feed) ───────────────────────────────────────────────
+    match /posts/{postId} {
+      allow read: if isAuth();
+      allow create: if isAuth() && request.resource.data.authorId == request.auth.uid;
+      allow update: if isAuth() && (
+        resource.data.authorId == request.auth.uid
+        || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes', 'likedBy', 'reportCount'])
+      );
+      allow delete: if isAuth() && resource.data.authorId == request.auth.uid;
+
+      // Comments
+      match /comments/{commentId} {
+        allow read: if isAuth();
+        allow create: if isAuth() && request.resource.data.authorId == request.auth.uid;
+        allow delete: if isAuth() && resource.data.authorId == request.auth.uid;
+      }
+    }
+
+    // ─── Notifications ────────────────────────────────────────────────────────
+    match /notifications/{notificationId} {
+      allow read: if isAuth() && resource.data.userId == request.auth.uid;
+      allow create: if isAuth(); // Server-side or other users can create notifications
+      allow update: if isAuth() && resource.data.userId == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
+      allow delete: if isAuth() && resource.data.userId == request.auth.uid;
+    }
+
+    // ─── Ratings ─────────────────────────────────────────────────────────────
+    // Only participants of a match can rate each other; one rating per pair per match
+    match /ratings/{ratingId} {
+      allow read: if isAuth();
+      allow create: if isAuth()
+        && request.resource.data.raterId == request.auth.uid
+        && request.resource.data.raterId != request.resource.data.ratedId;
+      allow update: if false; // Ratings are immutable
+      allow delete: if false;
+    }
+
+    // ─── Badges ───────────────────────────────────────────────────────────────
+    // Badge definitions are read-only for users; only admin/server can write
+    match /badgeDefinitions/{badgeId} {
+      allow read: if isAuth();
+      allow write: if false; // Admin only via Firebase Console or server SDK
+    }
+  }
+}

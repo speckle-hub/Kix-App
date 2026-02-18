@@ -43,6 +43,14 @@ export function AuthProvider({ children }) {
             position: 'ST',
             nationality: '🇬🇧',
             stats: initialStats,
+            // RPG Progression (protected — only updated via match completion)
+            xp: 0,
+            level: 0,
+            badges: [],
+            noShowCount: 0,
+            reliabilityScore: 100,
+            matchesPlayed: 0,
+            matchesHosted: 0,
             createdAt: new Date().toISOString()
         });
 

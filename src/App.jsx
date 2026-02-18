@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react'
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import { Hero } from './components/Hero'
 import { MatchFeed } from './components/MatchFeed'
+import { MatchDetails } from './components/MatchDetails'
+import { CreateMatch } from './components/CreateMatch'
 import { AuthModal } from './components/AuthModal'
 import { ProfilePage } from './components/ProfilePage'
 import { SquadsPage } from './components/SquadsPage'
@@ -11,30 +13,17 @@ import { BottomNavbar } from './components/BottomNavbar'
 import { useAuth } from './contexts/AuthContext'
 import { AnimatePresence } from 'framer-motion'
 
+function ProtectedRoute({ children }) {
+  const { currentUser } = useAuth()
+  return currentUser ? children : <Navigate to="/" replace />
+}
+
 export default function App() {
   const { currentUser } = useAuth()
   const location = useLocation()
   const navigate = useNavigate()
 
-  useEffect(() => {
-    console.log(`🗺️ KIX ROUTE DEBUG: Current path is ${location.pathname}`);
-  }, [location.pathname]);
-
   const [showAuth, setShowAuth] = useState(false)
-
-  // Global Click Debugger
-  useEffect(() => {
-    const handleGlobalClick = (e) => {
-      console.log('🔍 KIX CLICK DEBUG:', {
-        element: e.target,
-        id: e.target.id,
-        className: e.target.className,
-        parent: e.target.parentElement?.className
-      });
-    };
-    window.addEventListener('click', handleGlobalClick, true);
-    return () => window.removeEventListener('click', handleGlobalClick, true);
-  }, []);
 
   return (
     <>
@@ -49,11 +38,13 @@ export default function App() {
             <Navigate to="/matches" replace />
           )
         } />
-        <Route path="/matches" element={<MatchFeed />} />
-        <Route path="/squads" element={<SquadsPage />} />
-        <Route path="/news" element={<NewsPage />} />
-        <Route path="/feed" element={<PitchSideFeed onNavigateToProfile={() => navigate('/profile')} />} />
-        <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/matches" element={<ProtectedRoute><MatchFeed /></ProtectedRoute>} />
+        <Route path="/matches/create" element={<ProtectedRoute><CreateMatch /></ProtectedRoute>} />
+        <Route path="/matches/:matchId" element={<ProtectedRoute><MatchDetails /></ProtectedRoute>} />
+        <Route path="/squads" element={<ProtectedRoute><SquadsPage /></ProtectedRoute>} />
+        <Route path="/news" element={<ProtectedRoute><NewsPage /></ProtectedRoute>} />
+        <Route path="/feed" element={<ProtectedRoute><PitchSideFeed onNavigateToProfile={() => navigate('/profile')} /></ProtectedRoute>} />
+        <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
 
