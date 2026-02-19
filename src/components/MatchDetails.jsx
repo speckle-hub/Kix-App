@@ -11,8 +11,14 @@ import { Button } from './Button';
 import {
     MapPin, Clock, Users, Shield, ChevronLeft,
     Lock, CheckCircle, XCircle, Loader2, Crown,
-    AlertTriangle, UserCheck
+    AlertTriangle, UserCheck, MessageSquare, MessageCircle,
+    UserX, ShieldAlert
 } from 'lucide-react';
+import {
+    RELIABILITY_ADJUSTMENTS,
+    calculateNewReliability
+} from '../lib/rpg';
+import { ChatWindow } from './ChatWindow';
 
 const STATUS_CONFIG = {
     open: { label: 'Open', color: 'text-primary', bg: 'bg-primary/10' },
@@ -22,21 +28,43 @@ const STATUS_CONFIG = {
     canceled: { label: 'Canceled', color: 'text-red-400', bg: 'bg-red-400/10' },
 };
 
-function RosterSlot({ uid, index, isHost }) {
+function RosterSlot({ uid, index, isHost, canAction, onNoShow }) {
     const [name, setName] = useState('...');
+    const [userData, setUserData] = useState(null);
     useEffect(() => {
         if (!uid) return;
         getDoc(doc(db, 'users', uid)).then(d => {
-            if (d.exists()) setName(d.data().name || 'Player');
+            if (d.exists()) {
+                setName(d.data().name || 'Player');
+                setUserData(d.data());
+            }
         });
     }, [uid]);
     return (
-        <div className="flex items-center gap-3 py-2 border-b border-white/5 last:border-0">
+        <div className="flex items-center gap-3 py-3 border-b border-white/5 last:border-0">
             <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">
                 {index + 1}
             </div>
-            <span className="text-sm font-medium text-white/80 flex-1">{name}</span>
-            {isHost && <Crown size={12} className="text-yellow-400" />}
+            <div className="flex-1">
+                <span className="text-sm font-medium text-white/80">{name}</span>
+                {userData && (
+                    <div className="flex items-center gap-2 mt-0.5">
+                        <ReliabilityBadge score={userData.reliabilityScore} size="sm" showLabel={false} />
+                    </div>
+                )}
+            </div>
+            <div className="flex items-center gap-2">
+                {isHost && <Crown size={12} className="text-yellow-400" />}
+                {canAction && !isHost && (
+                    <button
+                        onClick={() => onNoShow(uid)}
+                        className="p-1.5 hover:bg-red-500/10 text-red-400/50 hover:text-red-400 rounded-lg transition-colors"
+                        title="Mark No-Show"
+                    >
+                        <UserX size={14} />
+                    </button>
+                )}
+            </div>
         </div>
     );
 }
@@ -50,6 +78,7 @@ export function MatchDetails() {
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState(false);
     const [error, setError] = useState(null);
+    const [showChat, setShowChat] = useState(false);
 
     useEffect(() => {
         if (!matchId) return;
@@ -154,6 +183,26 @@ export function MatchDetails() {
         setActionLoading(false);
     };
 
+    const handleNoShow = async (uid) => {
+        if (!window.confirm('Mark this player as a no-show? This will impact their reliability score.')) return;
+        setActionLoading(true);
+        try {
+            const userRef = doc(db, 'users', uid);
+            await runTransaction(db, async (tx) => {
+                const userSnap = await tx.get(userRef);
+                if (!userSnap.exists()) return;
+                const currentScore = userSnap.data().reliabilityScore || 100;
+                tx.update(userRef, {
+                    reliabilityScore: calculateNewReliability(currentScore, RELIABILITY_ADJUSTMENTS.NO_SHOW)
+                });
+                tx.update(doc(db, 'matches', matchId), {
+                    noShows: arrayUnion(uid)
+                });
+            });
+        } catch (e) { console.error(e); }
+        setActionLoading(false);
+    };
+
     const handleHostAction = async (action) => {
         setActionLoading(true);
         const updates = {
@@ -244,7 +293,14 @@ export function MatchDetails() {
                     <p className="text-white/20 text-sm text-center py-4">No players yet. Be the first!</p>
                 ) : (
                     (match.joined_players || []).map((uid, i) => (
-                        <RosterSlot key={uid} uid={uid} index={i} isHost={uid === match.hostId} />
+                        <RosterSlot
+                            key={uid}
+                            uid={uid}
+                            index={i}
+                            isHost={uid === match.hostId}
+                            canAction={isHost && match.status === 'completed' && !match.noShows?.includes(uid)}
+                            onNoShow={handleNoShow}
+                        />
                     ))
                 )}
             </div>
@@ -334,6 +390,48 @@ export function MatchDetails() {
                         </div>
                     </div>
                 )}
+                {/* Floating Actions */}
+                <div className="fixed bottom-8 right-6 flex flex-col gap-3">
+                    {isJoined && (
+                        <motion.button
+                            whileTap={{ scale: 0.9 }}
+                            onClick={() => setShowChat(true)}
+                            className="w-14 h-14 bg-primary text-background rounded-full shadow-[0_0_20px_rgba(57,255,20,0.4)] flex items-center justify-center relative"
+                        >
+                            <MessageSquare size={24} />
+                            {/* We could add an unread badge here later */}
+                        </motion.button>
+                    )}
+                </div>
+
+                {/* Match Chat Overlay */}
+                <AnimatePresence>
+                    {showChat && (
+                        <>
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                onClick={() => setShowChat(false)}
+                                className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50"
+                            />
+                            <motion.div
+                                initial={{ y: '100%' }}
+                                animate={{ y: 0 }}
+                                exit={{ y: '100%' }}
+                                transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                                className="fixed inset-x-0 bottom-0 h-[85vh] z-50"
+                            >
+                                <ChatWindow
+                                    type="matches"
+                                    id={matchId}
+                                    title={match.title}
+                                    onClose={() => setShowChat(false)}
+                                />
+                            </motion.div>
+                        </>
+                    )}
+                </AnimatePresence>
             </div>
         </motion.div>
     );

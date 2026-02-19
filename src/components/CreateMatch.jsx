@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../lib/firebase';
@@ -31,8 +31,8 @@ function ChipSelect({ options, value, onChange }) {
                     type="button"
                     onClick={() => onChange(opt)}
                     className={`px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all ${value === opt
-                            ? 'bg-primary text-background'
-                            : 'bg-white/5 text-white/50 hover:bg-white/10'
+                        ? 'bg-primary text-background'
+                        : 'bg-white/5 text-white/50 hover:bg-white/10'
                         }`}
                 >
                     {opt}
@@ -54,8 +54,8 @@ function MultiChipSelect({ options, values, onChange }) {
                     type="button"
                     onClick={() => toggle(opt)}
                     className={`px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all ${values.includes(opt)
-                            ? 'bg-primary text-background'
-                            : 'bg-white/5 text-white/50 hover:bg-white/10'
+                        ? 'bg-primary text-background'
+                        : 'bg-white/5 text-white/50 hover:bg-white/10'
                         }`}
                 >
                     {opt}
@@ -66,18 +66,18 @@ function MultiChipSelect({ options, values, onChange }) {
 }
 
 export function CreateMatch() {
-    const navigate = useNavigate();
-    const { currentUser, userData } = useAuth();
+    const location = useLocation();
+    const prefill = location.state?.prefill || {};
 
     const [form, setForm] = useState({
-        title: '',
-        location: '',
-        kickoffTime: '',
-        format: '5v5',
-        skillLevel: 'Intermediate',
-        capacity: 10,
-        tags: [],
-        notes: '',
+        title: prefill.title || '',
+        location: prefill.location || '',
+        kickoffTime: prefill.kickoffTime || '',
+        format: prefill.format || '5v5',
+        skillLevel: prefill.skillLevel || 'Intermediate',
+        capacity: prefill.capacity || 10,
+        tags: prefill.tags || [],
+        notes: prefill.notes || '',
     });
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
@@ -104,6 +104,7 @@ export function CreateMatch() {
                 spotsLeft: Number(form.capacity) - 1,
                 status: 'open',
                 createdAt: new Date().toISOString(),
+                fromRequestId: location.state?.fromRequestId || null,
             });
             navigate(`/matches/${docRef.id}`);
         } catch (err) {

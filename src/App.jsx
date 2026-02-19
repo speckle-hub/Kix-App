@@ -4,6 +4,7 @@ import { Hero } from './components/Hero'
 import { MatchFeed } from './components/MatchFeed'
 import { MatchDetails } from './components/MatchDetails'
 import { CreateMatch } from './components/CreateMatch'
+import { CreateRequest } from './components/CreateRequest'
 import { AuthModal } from './components/AuthModal'
 import { ProfilePage } from './components/ProfilePage'
 import { SquadsPage } from './components/SquadsPage'
@@ -40,6 +41,7 @@ export default function App() {
         } />
         <Route path="/matches" element={<ProtectedRoute><MatchFeed /></ProtectedRoute>} />
         <Route path="/matches/create" element={<ProtectedRoute><CreateMatch /></ProtectedRoute>} />
+        <Route path="/matches/request" element={<ProtectedRoute><CreateRequest /></ProtectedRoute>} />
         <Route path="/matches/:matchId" element={<ProtectedRoute><MatchDetails /></ProtectedRoute>} />
         <Route path="/squads" element={<ProtectedRoute><SquadsPage /></ProtectedRoute>} />
         <Route path="/news" element={<ProtectedRoute><NewsPage /></ProtectedRoute>} />

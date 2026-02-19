@@ -13,7 +13,27 @@
  * Overall Rating (OVR):
  *   Weighted by position. Caps at 99.
  *   Position weights are defined per position.
+ * 
+ * Reliability Score:
+ *   0-100 points. 
+ *   +2 for check-in
+ *   -10 for no-show
+ *   -5 for host cancel < 2h before
+ *   Tiers: Elite (95+), Reliable (80+), Fair (60+), Caution (<60)
  */
+
+export const RELIABILITY_TIERS = [
+    { min: 95, label: 'Elite', color: 'text-primary', bg: 'bg-primary/10', border: 'border-primary/50' },
+    { min: 80, label: 'Reliable', color: 'text-green-400', bg: 'bg-green-400/10', border: 'border-green-400/30' },
+    { min: 60, label: 'Fair', color: 'text-yellow-400', bg: 'bg-yellow-400/10', border: 'border-yellow-400/30' },
+    { min: 0, label: 'Caution', color: 'text-red-400', bg: 'bg-red-400/10', border: 'border-red-400/30' },
+];
+
+export const RELIABILITY_ADJUSTMENTS = {
+    CHECKIN: 2,
+    NO_SHOW: -10,
+    LATE_CANCEL: -5
+};
 
 export const POSITION_WEIGHTS = {
     ST: { pace: 0.30, shooting: 0.35, passing: 0.10, dribbling: 0.15, physical: 0.10 },
@@ -100,3 +120,18 @@ export function clampStatsToCap(stats, level) {
         Object.entries(stats).map(([k, v]) => [k, Math.min(v, cap)])
     );
 }
+
+/**
+ * Get reliability tier info for a given score.
+ */
+export function getReliabilityTier(score = 100) {
+    return RELIABILITY_TIERS.find(t => score >= t.min) || RELIABILITY_TIERS[RELIABILITY_TIERS.length - 1];
+}
+
+/**
+ * Calculate new reliability score.
+ */
+export function calculateNewReliability(currentScore = 100, adjustment) {
+    return Math.max(0, Math.min(100, currentScore + adjustment));
+}
+

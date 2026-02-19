@@ -1,13 +1,7 @@
-import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { MatchCard } from "./MatchCard";
-import {
-    collection, query, orderBy, limit,
-    startAfter, getDocs, where
-} from 'firebase/firestore';
-import { db } from '../lib/firebase';
-import { Loader2, SlidersHorizontal, X, Trophy, Clock, Users, Zap, Plus } from 'lucide-react';
+import { Loader2, SlidersHorizontal, X, Trophy, Clock, Users, Zap, Plus, MessageSquare } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { RequestCard } from './RequestCard';
 
 const PAGE_SIZE = 8;
 
@@ -88,8 +82,19 @@ function FilterChip({ label, active, onClick }) {
 // In-memory cache for query results
 const queryCache = new Map();
 
+import { MatchCard } from "./MatchCard";
+import {
+    collection, query, orderBy, limit,
+    startAfter, getDocs, where
+} from 'firebase/firestore';
+import { db } from '../lib/firebase';
+
 export function MatchFeed() {
+    const [searchParams, setSearchParams] = useSearchParams();
+    const currentTab = searchParams.get('tab') === 'requests' ? 'requests' : 'matches';
+
     const [matches, setMatches] = useState([]);
+    const [requests, setRequests] = useState([]);
     const [loading, setLoading] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
     const [error, setError] = useState(null);
@@ -108,48 +113,62 @@ export function MatchFeed() {
 
     const hasFilters = format !== 'All' || skillLevel !== 'All' || timeFilter !== 'All';
 
+    const setTab = (tab) => {
+        setSearchParams({ tab });
+        lastDocRef.current = null;
+    };
+
     const buildQuery = useCallback((afterDoc = null) => {
-        let constraints = [
-            where('status', 'in', ['open', 'locked']),
-        ];
+        const coll = currentTab === 'matches' ? 'matches' : 'matchRequests';
+        let constraints = [];
+
+        if (currentTab === 'matches') {
+            constraints.push(where('status', 'in', ['open', 'locked']));
+        } else {
+            constraints.push(where('status', '==', 'open'));
+            constraints.push(where('expiresAt', '>', new Date().toISOString()));
+        }
 
         if (format !== 'All') constraints.push(where('format', '==', format));
         if (skillLevel !== 'All') constraints.push(where('skillLevel', '==', skillLevel));
 
-        if (timeFilter === 'Today') {
-            const start = new Date(); start.setHours(0, 0, 0, 0);
-            const end = new Date(); end.setHours(23, 59, 59, 999);
-            constraints.push(where('kickoffTime', '>=', start.toISOString()));
-            constraints.push(where('kickoffTime', '<=', end.toISOString()));
-        } else if (timeFilter === 'This Week') {
-            const start = new Date();
-            const end = new Date(); end.setDate(end.getDate() + 7);
-            constraints.push(where('kickoffTime', '>=', start.toISOString()));
-            constraints.push(where('kickoffTime', '<=', end.toISOString()));
+        if (currentTab === 'matches') {
+            if (timeFilter === 'Today') {
+                const start = new Date(); start.setHours(0, 0, 0, 0);
+                const end = new Date(); end.setHours(23, 59, 59, 999);
+                constraints.push(where('kickoffTime', '>=', start.toISOString()));
+                constraints.push(where('kickoffTime', '<=', end.toISOString()));
+            } else if (timeFilter === 'This Week') {
+                const start = new Date();
+                const end = new Date(); end.setDate(end.getDate() + 7);
+                constraints.push(where('kickoffTime', '>=', start.toISOString()));
+                constraints.push(where('kickoffTime', '<=', end.toISOString()));
+            }
         }
 
-        const orderField = sortBy === 'time_asc' ? 'kickoffTime' : 'spotsLeft';
-        const orderDir = sortBy === 'time_asc' ? 'asc' : 'desc';
+        const orderField = currentTab === 'matches' ? (sortBy === 'time_asc' ? 'kickoffTime' : 'spotsLeft') : 'expiresAt';
+        const orderDir = (currentTab === 'matches' && sortBy === 'time_asc') || currentTab === 'requests' ? 'asc' : 'desc';
+
         constraints.push(orderBy(orderField, orderDir));
         constraints.push(limit(PAGE_SIZE));
 
         if (afterDoc) constraints.push(startAfter(afterDoc));
 
-        return query(collection(db, 'matches'), ...constraints);
-    }, [format, skillLevel, timeFilter, sortBy]);
+        return query(collection(db, coll), ...constraints);
+    }, [format, skillLevel, timeFilter, sortBy, currentTab]);
 
     const fetchMatches = useCallback(async (reset = false) => {
-        const cacheKey = `${format}-${skillLevel}-${timeFilter}-${sortBy}`;
+        const cacheKey = `${currentTab}-${format}-${skillLevel}-${timeFilter}-${sortBy}`;
 
         if (reset) {
             setLoading(true);
             setError(null);
             lastDocRef.current = null;
 
-            // Check cache first
             if (queryCache.has(cacheKey)) {
                 const cached = queryCache.get(cacheKey);
-                setMatches(cached.matches);
+                if (currentTab === 'matches') setMatches(cached.items);
+                else setRequests(cached.items);
                 lastDocRef.current = cached.lastDoc;
                 setHasMore(cached.hasMore);
                 setLoading(false);
@@ -162,28 +181,29 @@ export function MatchFeed() {
         try {
             const q = buildQuery(reset ? null : lastDocRef.current);
             const snapshot = await getDocs(q);
-            const newMatches = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            const newItems = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             const lastDoc = snapshot.docs[snapshot.docs.length - 1] || null;
             const more = snapshot.docs.length === PAGE_SIZE;
 
             if (reset) {
-                setMatches(newMatches);
-                // Cache the first page
-                queryCache.set(cacheKey, { matches: newMatches, lastDoc, hasMore: more });
+                if (currentTab === 'matches') setMatches(newItems);
+                else setRequests(newItems);
+                queryCache.set(cacheKey, { items: newItems, lastDoc, hasMore: more });
             } else {
-                setMatches(prev => [...prev, ...newMatches]);
+                if (currentTab === 'matches') setMatches(prev => [...prev, ...newItems]);
+                else setRequests(prev => [...prev, ...newItems]);
             }
 
             lastDocRef.current = lastDoc;
             setHasMore(more);
         } catch (err) {
             console.error('MatchFeed error:', err);
-            setError(err.message || 'Failed to load matches.');
+            setError(err.message || 'Failed to load feed.');
         } finally {
             setLoading(false);
             setLoadingMore(false);
         }
-    }, [buildQuery, format, skillLevel, timeFilter, sortBy]);
+    }, [buildQuery, format, skillLevel, timeFilter, sortBy, currentTab]);
 
     // Refetch when filters change
     useEffect(() => {
@@ -215,19 +235,32 @@ export function MatchFeed() {
     return (
         <div className="p-6 pb-32 space-y-6">
             {/* Header */}
-            <div className="flex justify-between items-end">
+            <div className="flex justify-between items-start">
                 <div>
-                    <h2 className="text-3xl font-condensed">Open Matches</h2>
-                    <p className="text-white/40 text-sm uppercase tracking-widest font-bold">
-                        {loading ? 'Scouting...' : `${matches.length} games found`}
-                    </p>
+                    <h2 className="text-3xl font-condensed">Pitch Hub</h2>
+                    <div className="flex gap-4 mt-2">
+                        <button
+                            onClick={() => setTab('matches')}
+                            className={`text-xs font-bold uppercase tracking-widest pb-1 border-b-2 transition-all ${currentTab === 'matches' ? 'text-primary border-primary' : 'text-white/20 border-transparent'
+                                }`}
+                        >
+                            Matches
+                        </button>
+                        <button
+                            onClick={() => setTab('requests')}
+                            className={`text-xs font-bold uppercase tracking-widest pb-1 border-b-2 transition-all ${currentTab === 'requests' ? 'text-primary border-primary' : 'text-white/20 border-transparent'
+                                }`}
+                        >
+                            Requests
+                        </button>
+                    </div>
                 </div>
                 <div className="flex items-center gap-2">
                     <button
-                        onClick={() => navigate('/matches/create')}
-                        className="flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-bold uppercase tracking-wider bg-primary text-background hover:bg-primary/80 transition-colors"
+                        onClick={() => navigate(currentTab === 'matches' ? '/matches/create' : '/matches/request')}
+                        className="flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-bold uppercase tracking-wider bg-primary text-background hover:bg-primary/80 transition-colors shadow-[0_0_15px_rgba(57,255,20,0.3)]"
                     >
-                        <Plus size={14} /> Create
+                        <Plus size={14} /> {currentTab === 'matches' ? 'Match' : 'Post'}
                     </button>
                     <button
                         onClick={() => setShowFilters(v => !v)}
@@ -237,11 +270,8 @@ export function MatchFeed() {
                             }`}
                     >
                         <SlidersHorizontal size={14} />
-                        Filters
                         {hasFilters && (
-                            <span className="w-4 h-4 bg-primary text-background rounded-full text-[10px] flex items-center justify-center font-black">
-                                !
-                            </span>
+                            <span className="w-1.5 h-1.5 bg-primary rounded-full ms-1" />
                         )}
                     </button>
                 </div>
@@ -325,25 +355,31 @@ export function MatchFeed() {
                 </div>
             )}
 
-            {/* Match List */}
+            {/* Feed List */}
             <div className="grid gap-4">
                 {loading ? (
                     Array.from({ length: 3 }).map((_, i) => <MatchSkeleton key={i} />)
-                ) : matches.length === 0 ? (
+                ) : (currentTab === 'matches' ? matches : requests).length === 0 ? (
                     <EmptyState hasFilters={hasFilters} onClear={clearFilters} />
                 ) : (
                     <AnimatePresence mode="popLayout">
-                        {matches.map((match, i) => (
+                        {(currentTab === 'matches' ? matches : requests).map((item, i) => (
                             <motion.div
-                                key={match.id}
+                                key={item.id}
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: i < 3 ? i * 0.05 : 0 }}
                             >
-                                <MatchCard
-                                    {...match}
-                                    joined={match.joined_players?.length || 0}
-                                />
+                                {currentTab === 'matches' ? (
+                                    <MatchCard
+                                        {...item}
+                                        joined={item.joined_players?.length || 0}
+                                    />
+                                ) : (
+                                    <RequestCard
+                                        request={item}
+                                    />
+                                )}
                             </motion.div>
                         ))}
                     </AnimatePresence>
@@ -357,9 +393,9 @@ export function MatchFeed() {
                 </div>
             )}
 
-            {!loading && !hasMore && matches.length > 0 && (
+            {!loading && !hasMore && (currentTab === 'matches' ? matches : requests).length > 0 && (
                 <p className="text-center text-white/20 text-xs font-bold uppercase tracking-widest py-4">
-                    You've seen all the games
+                    You've seen all {currentTab}
                 </p>
             )}
         </div>

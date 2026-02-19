@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { User, Trophy, Share2 } from "lucide-react";
 import { calculateOVR, xpToLevel, levelProgress, xpForNextLevel } from "../lib/rpg";
+import { ReliabilityBadge } from "./ReliabilityBadge";
 
 const POSITIONS = ['ST', 'CF', 'CAM', 'CM', 'CDM', 'LW', 'RW', 'LB', 'RB', 'CB', 'GK'];
 
@@ -34,7 +35,7 @@ function LevelRing({ progress, level, size = 80 }) {
     );
 }
 
-export function PlayerCard({ stats, name = "Kix Player", position = "ST", nationality = "🇬🇧", xp = 0 }) {
+export function PlayerCard({ stats, name = "Kix Player", position = "ST", nationality = "🇬🇧", xp = 0, reliabilityScore = 100 }) {
     const level = xpToLevel(xp);
     const progress = levelProgress(xp);
     const ovr = calculateOVR(stats, position);
@@ -81,7 +82,10 @@ export function PlayerCard({ stats, name = "Kix Player", position = "ST", nation
                 <div className="w-full flex justify-between items-start mb-2">
                     <div className="flex flex-col items-start">
                         <span className="text-4xl font-condensed font-bold text-primary leading-none">{ovr}</span>
-                        <span className="text-sm font-bold opacity-60">{position}</span>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                            <span className="text-sm font-bold opacity-60 uppercase">{position}</span>
+                            <ReliabilityBadge score={reliabilityScore} size="sm" />
+                        </div>
                         <span className="text-xl mt-1">{nationality}</span>
                     </div>
                     <LevelRing progress={progress} level={level} size={72} />
