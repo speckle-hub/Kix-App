@@ -140,5 +140,17 @@ service cloud.firestore {
       allow read: if isAuth();
       allow write: if false; // Admin only via Firebase Console or server SDK
     }
+
+    // ─── Presence ─────────────────────────────────────────────────────────────
+    match /presence/{userId} {
+      allow read: if isAuth(); 
+      allow write: if isOwner(userId);
+    }
+
+    // ─── Pitches ──────────────────────────────────────────────────────────────
+    match /pitches/{pitchId} {
+      allow read: if isAuth();
+      allow write: if false; // Admin only
+    }
   }
 }

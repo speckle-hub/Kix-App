@@ -13,6 +13,9 @@ import { NewsPage } from './components/NewsPage'
 import { BottomNavbar } from './components/BottomNavbar'
 import { useAuth } from './contexts/AuthContext'
 import { AnimatePresence } from 'framer-motion'
+import { Suspense, lazy } from 'react'
+
+const MapView = lazy(() => import('./components/map/MapView'))
 
 function ProtectedRoute({ children }) {
   const { currentUser } = useAuth()
@@ -45,6 +48,13 @@ export default function App() {
         <Route path="/matches/:matchId" element={<ProtectedRoute><MatchDetails /></ProtectedRoute>} />
         <Route path="/squads" element={<ProtectedRoute><SquadsPage /></ProtectedRoute>} />
         <Route path="/news" element={<ProtectedRoute><NewsPage /></ProtectedRoute>} />
+        <Route path="/map" element={
+          <ProtectedRoute>
+            <Suspense fallback={<div className="h-screen bg-background" />}>
+              <MapView />
+            </Suspense>
+          </ProtectedRoute>
+        } />
         <Route path="/feed" element={<ProtectedRoute><PitchSideFeed onNavigateToProfile={() => navigate('/profile')} /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
         <Route path="*" element={<Navigate to="/" replace />} />

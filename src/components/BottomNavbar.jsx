@@ -1,12 +1,13 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
-import { LayoutGrid, Users, MessageSquare, User, Newspaper } from "lucide-react";
+import { LayoutGrid, Users, MessageSquare, User, Newspaper, Map as MapIcon } from "lucide-react";
 import { motion } from "framer-motion";
 import { useNavigate, useLocation } from "react-router-dom";
 
 const navItems = [
     { icon: LayoutGrid, label: "Matches", id: "matches", path: "/matches" },
     { icon: Users, label: "Squads", id: "squads", path: "/squads" },
+    { icon: MapIcon, label: "Map", id: "map", path: "/map" },
     { icon: Newspaper, label: "News", id: "news", path: "/news" },
     { icon: MessageSquare, label: "Feed", id: "feed", path: "/feed" },
     { icon: User, label: "Profile", id: "profile", path: "/profile" },
