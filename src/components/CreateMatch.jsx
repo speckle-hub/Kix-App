@@ -66,6 +66,8 @@ function MultiChipSelect({ options, values, onChange }) {
 }
 
 export function CreateMatch() {
+    const { currentUser, userData } = useAuth();
+    const navigate = useNavigate();
     const location = useLocation();
     const prefill = location.state?.prefill || {};
 

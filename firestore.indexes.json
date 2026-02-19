@@ -1,172 +1,295 @@
-[
-    {
-        "collectionGroup": "matches",
-        "queryScope": "COLLECTION",
-        "fields": [
-            {
-                "fieldPath": "status",
-                "order": "ASCENDING"
-            },
-            {
-                "fieldPath": "kickoffTime",
-                "order": "ASCENDING"
-            }
-        ]
-    },
-    {
-        "collectionGroup": "matches",
-        "queryScope": "COLLECTION",
-        "fields": [
-            {
-                "fieldPath": "status",
-                "order": "ASCENDING"
-            },
-            {
-                "fieldPath": "spotsLeft",
-                "order": "DESCENDING"
-            }
-        ]
-    },
-    {
-        "collectionGroup": "matches",
-        "queryScope": "COLLECTION",
-        "fields": [
-            {
-                "fieldPath": "status",
-                "order": "ASCENDING"
-            },
-            {
-                "fieldPath": "format",
-                "order": "ASCENDING"
-            },
-            {
-                "fieldPath": "kickoffTime",
-                "order": "ASCENDING"
-            }
-        ]
-    },
-    {
-        "collectionGroup": "matches",
-        "queryScope": "COLLECTION",
-        "fields": [
-            {
-                "fieldPath": "status",
-                "order": "ASCENDING"
-            },
-            {
-                "fieldPath": "skillLevel",
-                "order": "ASCENDING"
-            },
-            {
-                "fieldPath": "kickoffTime",
-                "order": "ASCENDING"
-            }
-        ]
-    },
-    {
-        "collectionGroup": "matches",
-        "queryScope": "COLLECTION",
-        "fields": [
-            {
-                "fieldPath": "status",
-                "order": "ASCENDING"
-            },
-            {
-                "fieldPath": "format",
-                "order": "ASCENDING"
-            },
-            {
-                "fieldPath": "skillLevel",
-                "order": "ASCENDING"
-            },
-            {
-                "fieldPath": "kickoffTime",
-                "order": "ASCENDING"
-            }
-        ]
-    },
-    {
-        "collectionGroup": "matches",
-        "queryScope": "COLLECTION",
-        "fields": [
-            {
-                "fieldPath": "status",
-                "order": "ASCENDING"
-            },
-            {
-                "fieldPath": "kickoffTime",
-                "order": "ASCENDING"
-            },
-            {
-                "fieldPath": "kickoffTime",
-                "order": "ASCENDING"
-            }
-        ]
-    },
-    {
-        "collectionGroup": "notifications",
-        "queryScope": "COLLECTION",
-        "fields": [
-            {
-                "fieldPath": "userId",
-                "order": "ASCENDING"
-            },
-            {
-                "fieldPath": "createdAt",
-                "order": "DESCENDING"
-            }
-        ]
-    },
-    {
-        "collectionGroup": "posts",
-        "queryScope": "COLLECTION",
-        "fields": [
-            {
-                "fieldPath": "createdAt",
-                "order": "DESCENDING"
-            }
-        ]
-    },
-    {
-        "collectionGroup": "matchRequests",
-        "queryScope": "COLLECTION",
-        "fields": [
-            {
-                "fieldPath": "status",
-                "order": "ASCENDING"
-            },
-            {
-                "fieldPath": "expiresAt",
-                "order": "ASCENDING"
-            }
-        ]
-    },
-    {
-        "collectionGroup": "notifications",
-        "queryScope": "COLLECTION",
-        "fields": [
-            {
-                "fieldPath": "userId",
-                "order": "ASCENDING"
-            },
-            {
-                "fieldPath": "read",
-                "order": "ASCENDING"
-            }
-        ]
-    },
-    {
-        "collectionGroup": "notifications",
-        "queryScope": "COLLECTION",
-        "fields": [
-            {
-                "fieldPath": "userId",
-                "order": "ASCENDING"
-            },
-            {
-                "fieldPath": "createdAt",
-                "order": "DESCENDING"
-            }
-        ]
-    }
-]
+{
+    "indexes": [
+        {
+            "collectionGroup": "matches",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "status",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "kickoffTime",
+                    "order": "ASCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "matches",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "status",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "spotsLeft",
+                    "order": "DESCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "matches",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "status",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "format",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "kickoffTime",
+                    "order": "ASCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "matches",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "status",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "skillLevel",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "kickoffTime",
+                    "order": "ASCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "matches",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "status",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "format",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "skillLevel",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "kickoffTime",
+                    "order": "ASCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "matches",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "status",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "format",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "spotsLeft",
+                    "order": "DESCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "matches",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "status",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "skillLevel",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "spotsLeft",
+                    "order": "DESCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "matches",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "status",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "format",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "skillLevel",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "spotsLeft",
+                    "order": "DESCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "matchRequests",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "status",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "expiresAt",
+                    "order": "ASCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "matchRequests",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "status",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "format",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "expiresAt",
+                    "order": "ASCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "matchRequests",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "status",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "skillLevel",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "expiresAt",
+                    "order": "ASCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "matchRequests",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "status",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "format",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "skillLevel",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "expiresAt",
+                    "order": "ASCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "matchRequests",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "status",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "expiresAt",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "createdAt",
+                    "order": "DESCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "matchRequests",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "creatorId",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "status",
+                    "order": "ASCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "notifications",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "userId",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "read",
+                    "order": "ASCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "notifications",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "userId",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "createdAt",
+                    "order": "DESCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "messages",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "matchId",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "createdAt",
+                    "order": "DESCENDING"
+                }
+            ]
+        }
+    ],
+    "fieldOverrides": []
+}
