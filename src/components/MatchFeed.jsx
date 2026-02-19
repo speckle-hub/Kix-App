@@ -1,3 +1,4 @@
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Loader2, SlidersHorizontal, X, Trophy, Clock, Users, Zap, Plus, MessageSquare } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -265,8 +266,8 @@ export function MatchFeed() {
                     <button
                         onClick={() => setShowFilters(v => !v)}
                         className={`flex items-center gap-2 px-3 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all ${showFilters || hasFilters
-                                ? 'bg-white/10 text-white'
-                                : 'bg-white/5 text-white/50 hover:bg-white/10'
+                            ? 'bg-white/10 text-white'
+                            : 'bg-white/5 text-white/50 hover:bg-white/10'
                             }`}
                     >
                         <SlidersHorizontal size={14} />
