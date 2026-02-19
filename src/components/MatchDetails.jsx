@@ -19,6 +19,7 @@ import {
     calculateNewReliability
 } from '../lib/rpg';
 import { ChatWindow } from './ChatWindow';
+import { ReliabilityBadge } from './ReliabilityBadge';
 
 const STATUS_CONFIG = {
     open: { label: 'Open', color: 'text-primary', bg: 'bg-primary/10' },
@@ -111,17 +112,17 @@ export function MatchDetails() {
         </div>
     );
 
-    const isHost = currentUser?.uid === match.hostId;
-    const isJoined = match.joined_players?.includes(currentUser?.uid);
-    const isOnWaitlist = match.waitlist?.includes(currentUser?.uid);
-    const isFull = (match.joined_players?.length || 0) >= match.capacity;
-    const statusCfg = STATUS_CONFIG[match.status] || STATUS_CONFIG.open;
+    const isHost = currentUser?.uid === match?.hostId;
+    const isJoined = match?.joined_players?.includes(currentUser?.uid);
+    const isOnWaitlist = match?.waitlist?.includes(currentUser?.uid);
+    const isFull = (match?.joined_players?.length || 0) >= (match?.capacity || 0);
+    const statusCfg = STATUS_CONFIG[match?.status] || STATUS_CONFIG.open;
 
     // Check-in window: 30 min before kickoff
     const now = Date.now();
-    const kickoff = match.kickoffTime ? new Date(match.kickoffTime).getTime() : null;
+    const kickoff = match?.kickoffTime ? new Date(match.kickoffTime).getTime() : null;
     const checkinOpen = kickoff && now >= kickoff - 30 * 60 * 1000 && now < kickoff + 90 * 60 * 1000;
-    const hasCheckedIn = match.checkedIn?.includes(currentUser?.uid);
+    const hasCheckedIn = match?.checkedIn?.includes(currentUser?.uid);
 
     // --- Actions ---
     const handleJoin = async () => {
@@ -237,24 +238,24 @@ export function MatchDetails() {
             {/* Header */}
             <div className="space-y-2">
                 <div className="flex items-start justify-between gap-3">
-                    <h1 className="text-3xl font-condensed leading-tight">{match.title}</h1>
+                    <h1 className="text-3xl font-condensed leading-tight">{match?.title || 'Loading match...'}</h1>
                     <span className={`flex-shrink-0 px-3 py-1 rounded-full text-xs font-bold uppercase ${statusCfg.bg} ${statusCfg.color}`}>
                         {statusCfg.label}
                     </span>
                 </div>
                 <div className="flex items-center gap-2 text-white/40 text-sm">
                     <MapPin size={14} />
-                    <span>{match.location}</span>
+                    <span>{match?.location || 'Unknown location'}</span>
                 </div>
             </div>
 
             {/* Info Grid */}
             <div className="grid grid-cols-2 gap-3">
                 {[
-                    { icon: Clock, label: 'Kickoff', value: match.kickoffTime ? new Date(match.kickoffTime).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : match.time },
-                    { icon: Users, label: 'Format', value: match.format || '—' },
-                    { icon: Shield, label: 'Skill Level', value: match.skillLevel || 'Open' },
-                    { icon: Crown, label: 'Host', value: match.hostName || 'Unknown' },
+                    { icon: Clock, label: 'Kickoff', value: match?.kickoffTime ? new Date(match.kickoffTime).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : 'Pending' },
+                    { icon: Users, label: 'Format', value: match?.format || '—' },
+                    { icon: Shield, label: 'Skill Level', value: match?.skillLevel || 'Open' },
+                    { icon: Crown, label: 'Host', value: match?.hostName || 'Unknown' },
                 ].map(({ icon: Icon, label, value }) => (
                     <div key={label} className="bg-secondary/40 border border-white/5 rounded-2xl p-4">
                         <div className="flex items-center gap-2 text-white/30 text-[10px] font-bold uppercase tracking-widest mb-1">
