@@ -10,7 +10,7 @@ import { useAuth } from '../contexts/AuthContext';
 import {
     MapPin, Clock, Users, Shield, ChevronLeft,
     Lock, CheckCircle, XCircle, Loader2, Crown,
-    UserCheck, MessageSquare, Navigation, Share2, Bolt, Grass, Verified, Trophy
+    UserCheck, MessageSquare, Navigation, Share2, Bolt, Map, Verified, Trophy
 } from 'lucide-react';
 import {
     RELIABILITY_ADJUSTMENTS,
@@ -67,7 +67,7 @@ function RosterSlot({ uid, isHost, canAction, onNoShow }) {
                     {/* Reliability Indicator */}
                     <div
                         className={`absolute -bottom-1 -right-1 size-4 border-2 border-[#12230f] rounded-full ${(userData?.reliabilityScore || 100) >= 90 ? 'bg-green-500' :
-                                (userData?.reliabilityScore || 100) >= 70 ? 'bg-yellow-500' : 'bg-red-500'
+                            (userData?.reliabilityScore || 100) >= 70 ? 'bg-yellow-500' : 'bg-red-500'
                             }`}
                         title={`Reliability: ${userData?.reliabilityScore || 100}%`}
                     />
@@ -537,8 +537,8 @@ export function MatchDetails() {
                         disabled={actionLoading || (isFull && !isJoined && !isOnWaitlist && !isHost && match.status === 'locked')}
                         onClick={isJoined ? handleLeave : (hasCheckedIn ? null : (checkinOpen ? handleCheckin : handleJoin))}
                         className={`flex-1 h-16 rounded-2xl font-black text-xs uppercase tracking-[0.2em] flex items-center justify-center transition-all active:scale-[0.98] shadow-lg ${isJoined
-                                ? (checkinOpen && !hasCheckedIn ? 'bg-blue-500 text-white shadow-blue-500/20' : 'bg-white/5 text-white/60 border border-white/10')
-                                : (isFull ? 'bg-yellow-500 text-black shadow-yellow-500/20' : 'bg-primary text-black shadow-primary/30')
+                            ? (checkinOpen && !hasCheckedIn ? 'bg-blue-500 text-white shadow-blue-500/20' : 'bg-white/5 text-white/60 border border-white/10')
+                            : (isFull ? 'bg-yellow-500 text-black shadow-yellow-500/20' : 'bg-primary text-black shadow-primary/30')
                             }`}
                     >
                         {actionLoading ? (
