@@ -12,8 +12,8 @@ import { PitchSideFeed } from './components/PitchSideFeed'
 import { NewsPage } from './components/NewsPage'
 import { BottomNavbar } from './components/BottomNavbar'
 import { useAuth } from './contexts/AuthContext'
-import { AnimatePresence } from 'framer-motion'
 import { Suspense, lazy } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
 
 const MapView = lazy(() => import('./components/map/MapView'))
 
@@ -31,43 +31,43 @@ export default function App() {
 
   return (
     <>
-      <Routes>
-        <Route path="/" element={
-          !currentUser ? (
-            <Hero
-              onGetStarted={() => setShowAuth(true)}
-              onLogin={() => setShowAuth(true)}
-            />
-          ) : (
-            <Navigate to="/matches" replace />
-          )
-        } />
-        <Route path="/matches" element={<ProtectedRoute><MatchFeed /></ProtectedRoute>} />
-        <Route path="/matches/create" element={<ProtectedRoute><CreateMatch /></ProtectedRoute>} />
-        <Route path="/matches/request" element={<ProtectedRoute><CreateRequest /></ProtectedRoute>} />
-        <Route path="/matches/:matchId" element={<ProtectedRoute><MatchDetails /></ProtectedRoute>} />
-        <Route path="/squads" element={<ProtectedRoute><SquadsPage /></ProtectedRoute>} />
-        <Route path="/news" element={<ProtectedRoute><NewsPage /></ProtectedRoute>} />
-        <Route path="/map" element={
-          <ProtectedRoute>
-            <Suspense fallback={<div className="h-screen bg-background" />}>
-              <MapView />
-            </Suspense>
-          </ProtectedRoute>
-        } />
-        <Route path="/feed" element={<ProtectedRoute><PitchSideFeed onNavigateToProfile={() => navigate('/profile')} /></ProtectedRoute>} />
-        <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-
-      <AnimatePresence>
-        {showAuth && !currentUser && (
-          <AuthModal
-            isOpen={showAuth}
-            onClose={() => setShowAuth(false)}
-          />
-        )}
+      <AnimatePresence mode="wait">
+        <Routes location={location} key={location.pathname}>
+          <Route path="/" element={
+            !currentUser ? (
+              <Hero
+                onGetStarted={() => setShowAuth(true)}
+                onLogin={() => setShowAuth(true)}
+              />
+            ) : (
+              <Navigate to="/matches" replace />
+            )
+          } />
+          <Route path="/matches" element={<ProtectedRoute><MatchFeed /></ProtectedRoute>} />
+          <Route path="/matches/create" element={<ProtectedRoute><CreateMatch /></ProtectedRoute>} />
+          <Route path="/matches/request" element={<ProtectedRoute><CreateRequest /></ProtectedRoute>} />
+          <Route path="/matches/:matchId" element={<ProtectedRoute><MatchDetails /></ProtectedRoute>} />
+          <Route path="/squads" element={<ProtectedRoute><SquadsPage /></ProtectedRoute>} />
+          <Route path="/news" element={<ProtectedRoute><NewsPage /></ProtectedRoute>} />
+          <Route path="/map" element={
+            <ProtectedRoute>
+              <Suspense fallback={<div className="h-screen bg-background" />}>
+                <MapView />
+              </Suspense>
+            </ProtectedRoute>
+          } />
+          <Route path="/feed" element={<ProtectedRoute><PitchSideFeed onNavigateToProfile={() => navigate('/profile')} /></ProtectedRoute>} />
+          <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
       </AnimatePresence>
+
+      {showAuth && !currentUser && (
+        <AuthModal
+          isOpen={showAuth}
+          onClose={() => setShowAuth(false)}
+        />
+      )}
 
       {currentUser && <BottomNavbar />}
     </>

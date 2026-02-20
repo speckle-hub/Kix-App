@@ -3,8 +3,16 @@ import { motion } from 'framer-motion';
 import { MapPin, Navigation, Info, X } from 'lucide-react';
 import { Button } from '../Button';
 
-export function PitchCard({ pitch, onClose, onNavigate }) {
+export function PitchCard({ pitch, onClose }) {
     if (!pitch) return null;
+
+    const handleDirections = () => {
+        const { lat, lng } = pitch.location || {};
+        const url = lat && lng
+            ? `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`
+            : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(pitch.name || 'football pitch')}`;
+        window.open(url, '_blank', 'noopener,noreferrer');
+    };
 
     return (
         <motion.div
@@ -55,7 +63,7 @@ export function PitchCard({ pitch, onClose, onNavigate }) {
                     <div className="flex gap-2">
                         <Button
                             className="flex-1 flex items-center justify-center gap-2"
-                            onClick={() => onNavigate(pitch)}
+                            onClick={handleDirections}
                         >
                             <Navigation size={16} />
                             GET DIRECTIONS

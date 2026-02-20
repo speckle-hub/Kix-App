@@ -1,137 +1,93 @@
-/**
- * KIX RPG Progression System
- * 
- * XP Sources:
- *   - Match participation: +50 XP
- *   - Check-in (no-show prevention): +10 XP bonus
- *   - Sportsmanship rating 4+: +15 XP bonus
- *   - Hosting a match: +25 XP bonus
- * 
- * Level formula: level = floor(sqrt(xp / 100))
- * XP to next level: (level + 1)^2 * 100
- * 
- * Overall Rating (OVR):
- *   Weighted by position. Caps at 99.
- *   Position weights are defined per position.
- * 
- * Reliability Score:
- *   0-100 points. 
- *   +2 for check-in
- *   -10 for no-show
- *   -5 for host cancel < 2h before
- *   Tiers: Elite (95+), Reliable (80+), Fair (60+), Caution (<60)
- */
-
-export const RELIABILITY_TIERS = [
-    { min: 95, label: 'Elite', color: 'text-primary', bg: 'bg-primary/10', border: 'border-primary/50' },
-    { min: 80, label: 'Reliable', color: 'text-green-400', bg: 'bg-green-400/10', border: 'border-green-400/30' },
-    { min: 60, label: 'Fair', color: 'text-yellow-400', bg: 'bg-yellow-400/10', border: 'border-yellow-400/30' },
-    { min: 0, label: 'Caution', color: 'text-red-400', bg: 'bg-red-400/10', border: 'border-red-400/30' },
-];
+export const XP_PER_MATCH = 50;
+export const XP_FOR_HOSTING = 20;
+export const XP_FOR_SPORTSMANSHIP = 10;
 
 export const RELIABILITY_ADJUSTMENTS = {
-    CHECKIN: 2,
-    NO_SHOW: -10,
-    LATE_CANCEL: -5
+    NO_SHOW: -15,
+    LATE_CANCEL: -5,
+    HOST_NO_SHOW: -25,
+    MATCH_COMPLETED: 2
 };
 
-export const POSITION_WEIGHTS = {
-    ST: { pace: 0.30, shooting: 0.35, passing: 0.10, dribbling: 0.15, physical: 0.10 },
-    CF: { pace: 0.25, shooting: 0.30, passing: 0.15, dribbling: 0.20, physical: 0.10 },
-    CAM: { pace: 0.15, shooting: 0.20, passing: 0.30, dribbling: 0.25, physical: 0.10 },
-    CM: { pace: 0.15, shooting: 0.15, passing: 0.35, dribbling: 0.20, physical: 0.15 },
-    CDM: { pace: 0.10, shooting: 0.10, passing: 0.30, dribbling: 0.15, physical: 0.35 },
-    LW: { pace: 0.30, shooting: 0.20, passing: 0.15, dribbling: 0.30, physical: 0.05 },
-    RW: { pace: 0.30, shooting: 0.20, passing: 0.15, dribbling: 0.30, physical: 0.05 },
-    LB: { pace: 0.25, shooting: 0.05, passing: 0.20, dribbling: 0.15, physical: 0.35 },
-    RB: { pace: 0.25, shooting: 0.05, passing: 0.20, dribbling: 0.15, physical: 0.35 },
-    CB: { pace: 0.15, shooting: 0.05, passing: 0.15, dribbling: 0.10, physical: 0.55 },
-    GK: { pace: 0.10, shooting: 0.05, passing: 0.15, dribbling: 0.10, physical: 0.60 },
-};
-
-export const DEFAULT_WEIGHTS = { pace: 0.20, shooting: 0.20, passing: 0.20, dribbling: 0.20, physical: 0.20 };
-
-/**
- * Calculate the player's level from XP.
- */
-export function xpToLevel(xp = 0) {
-    return Math.floor(Math.sqrt(xp / 100));
+export function calculateNewReliability(current, adjustment) {
+    return Math.min(Math.max(current + adjustment, 0), 100);
 }
 
-/**
- * XP required to reach the next level.
- */
-export function xpForNextLevel(level) {
-    return Math.pow(level + 1, 2) * 100;
+export function getReliabilityTier(score) {
+    if (score >= 95) return { label: 'Elite', color: 'text-primary', bg: 'bg-primary/10', border: 'border-primary/20' };
+    if (score >= 80) return { label: 'Good', color: 'text-blue-400', bg: 'bg-blue-400/10', border: 'border-blue-400/20' };
+    if (score >= 60) return { label: 'Fair', color: 'text-yellow-400', bg: 'bg-yellow-400/10', border: 'border-yellow-400/20' };
+    return { label: 'Unreliable', color: 'text-red-400', bg: 'bg-red-400/10', border: 'border-red-400/20' };
 }
 
-/**
- * XP progress within the current level (0–1).
- */
-export function levelProgress(xp = 0) {
-    const level = xpToLevel(xp);
-    const currentLevelXp = Math.pow(level, 2) * 100;
-    const nextLevelXp = xpForNextLevel(level);
-    return (xp - currentLevelXp) / (nextLevelXp - currentLevelXp);
+export function xpToLevel(xp) {
+    if (xp >= 1000) return 10;
+    if (xp >= 500) return 5;
+    if (xp >= 250) return 3;
+    if (xp >= 100) return 2;
+    return 1;
 }
 
-/**
- * Calculate the Overall Rating (OVR) for a player based on position.
- * Stats are capped at 99.
- */
-export function calculateOVR(stats, position = 'ST') {
-    const weights = POSITION_WEIGHTS[position] || DEFAULT_WEIGHTS;
-    const raw =
-        (stats.pace || 50) * weights.pace +
-        (stats.shooting || 50) * weights.shooting +
-        (stats.passing || 50) * weights.passing +
-        (stats.dribbling || 50) * weights.dribbling +
-        (stats.physical || 50) * weights.physical;
-    return Math.min(99, Math.round(raw));
-}
-
-/**
- * XP awarded for a completed match.
- */
-export function calculateMatchXP({ participated, checkedIn, wasHost, avgRating }) {
-    let xp = 0;
-    if (participated) xp += 50;
-    if (checkedIn) xp += 10;
-    if (wasHost) xp += 25;
-    if (avgRating >= 4) xp += 15;
-    return xp;
-}
-
-/**
- * Stat caps per level. Players cannot exceed these values
- * unless they've earned enough XP.
- */
 export function getStatCap(level) {
-    // Starts at 60, increases by 2 per level, caps at 99
-    return Math.min(99, 60 + level * 2);
+    return 60 + (level * 2);
 }
 
-/**
- * Clamp stats to the current level's cap.
- */
 export function clampStatsToCap(stats, level) {
     const cap = getStatCap(level);
-    return Object.fromEntries(
-        Object.entries(stats).map(([k, v]) => [k, Math.min(v, cap)])
-    );
+    const clamped = {};
+    Object.keys(stats).forEach(key => {
+        clamped[key] = Math.min(stats[key], cap);
+    });
+    return clamped;
 }
 
-/**
- * Get reliability tier info for a given score.
- */
-export function getReliabilityTier(score = 100) {
-    return RELIABILITY_TIERS.find(t => score >= t.min) || RELIABILITY_TIERS[RELIABILITY_TIERS.length - 1];
+export function calculateOVR(stats, position) {
+    const values = Object.values(stats);
+    if (values.length === 0) return 0;
+    const sum = values.reduce((a, b) => a + b, 0);
+    return Math.round(sum / values.length);
 }
 
-/**
- * Calculate new reliability score.
- */
-export function calculateNewReliability(currentScore = 100, adjustment) {
-    return Math.max(0, Math.min(100, currentScore + adjustment));
+export function getXPForNextLevel(level) {
+    const thresholds = {
+        1: 100, 2: 250, 3: 500, 4: 750, 5: 1000,
+        6: 1250, 7: 1500, 8: 1750, 9: 2000, 10: Infinity
+    };
+    return thresholds[level] || 100;
 }
 
+export function getProgressToNextLevel(xp) {
+    const currentLevel = xpToLevel(xp);
+    if (currentLevel >= 10) return 100;
+
+    const currentLevelThreshold = getLevelThreshold(currentLevel);
+    const nextLevelThreshold = getXPForNextLevel(currentLevel);
+
+    const progress = ((xp - currentLevelThreshold) / (nextLevelThreshold - currentLevelThreshold)) * 100;
+    return Math.min(Math.max(progress, 0), 100);
+}
+
+function getLevelThreshold(level) {
+    const thresholds = { 1: 0, 2: 100, 3: 250, 4: 500, 5: 750, 6: 1000 };
+    return thresholds[level] || 0;
+}
+
+export function evaluateBadges(existingBadges = [], stats = {}) {
+    const newBadges = [...existingBadges];
+    const earnedIds = new Set(existingBadges.map(b => b.id));
+
+    if (!earnedIds.has('first_match') && stats.matchesCompleted >= 1) {
+        newBadges.push({ id: 'first_match', earnedAt: Date.now() });
+    }
+    if (!earnedIds.has('match_legend_10') && stats.matchesCompleted >= 10) {
+        newBadges.push({ id: 'match_legend_10', earnedAt: Date.now() });
+    }
+    if (!earnedIds.has('pro_host') && stats.matchesHosted >= 3) {
+        newBadges.push({ id: 'pro_host', earnedAt: Date.now() });
+    }
+    if (!earnedIds.has('reliable_player') && stats.matchesCompleted >= 5 && stats.reliabilityScore >= 95) {
+        newBadges.push({ id: 'reliable_player', earnedAt: Date.now() });
+    }
+
+    return newBadges;
+}

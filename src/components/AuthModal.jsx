@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from "framer-motion";
+// import { motion, AnimatePresence } from "framer-motion";
 import { X, Mail, Github, Chrome, Loader2 } from "lucide-react";
 import { Button } from "./Button";
 import { useAuth } from "../contexts/AuthContext";
@@ -38,25 +38,16 @@ export function AuthModal({ isOpen, onClose, initialView = "login" }) {
     };
 
     return (
-        <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+        <div
             className="fixed inset-0 z-[60] overflow-y-auto"
         >
             <div className="flex min-h-full items-center justify-center p-4 text-center">
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
+                <div
                     onClick={onClose}
                     className="fixed inset-0 bg-black/80 backdrop-blur-sm"
                 />
 
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                <div
                     className="relative w-full max-w-[450px] bg-[#111] border border-white/10 rounded-[32px] p-8 z-[70] shadow-2xl overflow-hidden text-left"
                 >
                     <button
@@ -161,8 +152,8 @@ export function AuthModal({ isOpen, onClose, initialView = "login" }) {
                             {view === "login" ? "Sign Up" : "Log In"}
                         </button>
                     </p>
-                </motion.div>
+                </div>
             </div>
-        </motion.div>
+        </div>
     );
 }

@@ -2,10 +2,15 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Loader2, SlidersHorizontal, X, Trophy, Clock, Users, Zap, Plus, MessageSquare } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import { collection, query, orderBy, limit, startAfter, getDocs, where } from 'firebase/firestore';
+import { db } from '../lib/firebase';
 import { RequestCard } from './RequestCard';
+import { MatchCard } from './MatchCard';
+import { MotionList } from './MotionList';
+import { haptics } from '../utils/haptics';
 
 const PAGE_SIZE = 8;
-
 const FORMATS = ['All', '5v5', '7v7', '11v11'];
 const SKILL_LEVELS = ['All', 'Beginner', 'Intermediate', 'Advanced', 'Pro'];
 const TIME_FILTERS = ['All', 'Today', 'This Week'];
@@ -14,58 +19,11 @@ const SORT_OPTIONS = [
     { label: 'Most Needed', value: 'spots_desc' },
 ];
 
-function MatchSkeleton() {
-    return (
-        <div className="bg-secondary/30 border border-white/5 rounded-3xl p-6 space-y-4 animate-pulse">
-            <div className="flex justify-between">
-                <div className="space-y-2">
-                    <div className="h-5 w-40 bg-white/10 rounded-lg" />
-                    <div className="h-3 w-28 bg-white/5 rounded-lg" />
-                </div>
-                <div className="h-7 w-20 bg-white/10 rounded-full" />
-            </div>
-            <div className="flex gap-4">
-                <div className="h-3 w-20 bg-white/5 rounded-lg" />
-                <div className="h-3 w-16 bg-white/5 rounded-lg" />
-            </div>
-            <div className="h-2 w-full bg-white/5 rounded-full" />
-            <div className="h-10 w-full bg-white/5 rounded-2xl" />
-        </div>
-    );
-}
+const queryCache = new Map();
 
-function EmptyState({ hasFilters, onClear }) {
-    return (
-        <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center p-12 border-2 border-dashed border-white/5 rounded-[40px] flex flex-col items-center gap-4"
-        >
-            <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center">
-                <Trophy size={28} className="text-white/20" />
-            </div>
-            <div>
-                <h3 className="text-white/60 font-bold text-lg mb-1">
-                    {hasFilters ? 'No matches found' : 'No open matches yet'}
-                </h3>
-                <p className="text-white/30 text-sm max-w-[240px] mx-auto">
-                    {hasFilters
-                        ? 'Try adjusting your filters to find more games.'
-                        : 'Be the first to create a match in your area!'}
-                </p>
-            </div>
-            {hasFilters && (
-                <button
-                    onClick={onClear}
-                    className="text-primary text-xs font-bold tracking-widest uppercase hover:underline"
-                >
-                    Clear Filters
-                </button>
-            )}
-        </motion.div>
-    );
-}
-
+/**
+ * FilterChip sub-component
+ */
 function FilterChip({ label, active, onClick }) {
     return (
         <button
@@ -80,17 +38,10 @@ function FilterChip({ label, active, onClick }) {
     );
 }
 
-// In-memory cache for query results
-const queryCache = new Map();
-
-import { MatchCard } from "./MatchCard";
-import {
-    collection, query, orderBy, limit,
-    startAfter, getDocs, where
-} from 'firebase/firestore';
-import { db } from '../lib/firebase';
-
 export function MatchFeed() {
+    console.log("MatchFeed Initialization...");
+    const { currentUser } = useAuth();
+    const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
     const currentTab = searchParams.get('tab') === 'requests' ? 'requests' : 'matches';
 
@@ -101,7 +52,6 @@ export function MatchFeed() {
     const [error, setError] = useState(null);
     const [hasMore, setHasMore] = useState(true);
     const [showFilters, setShowFilters] = useState(false);
-    const navigate = useNavigate();
 
     // Filters
     const [format, setFormat] = useState('All');
@@ -114,7 +64,66 @@ export function MatchFeed() {
 
     const hasFilters = format !== 'All' || skillLevel !== 'All' || timeFilter !== 'All';
 
+    /**
+     * Internal Sub-components to ensure scope access to navigate/currentUser
+     */
+    const MatchSkeleton = () => (
+        <div className="glass-card rounded-2xl p-4 space-y-4 animate-pulse">
+            <div className="flex justify-between items-start">
+                <div className="space-y-3">
+                    <div className="h-6 w-48 bg-white/10 rounded-lg" />
+                    <div className="h-3 w-32 bg-white/5 rounded-lg" />
+                </div>
+                <div className="h-8 w-24 bg-white/10 rounded-full" />
+            </div>
+            <div className="h-40 w-full bg-white/5 rounded-xl" />
+            <div className="flex justify-between items-center pt-2">
+                <div className="flex -space-x-2">
+                    {[1, 2, 3].map((i) => (
+                        <div key={`skel-user-${i}`} className="size-7 rounded-full bg-white/10 border-2 border-background" />
+                    ))}
+                </div>
+                <div className="h-10 w-28 bg-white/10 rounded-full" />
+            </div>
+        </div>
+    );
+
+    const EmptyState = ({ hasFilters, onClear }) => (
+        <div className="flex flex-col items-center justify-center py-20 px-6 text-center space-y-6">
+            <div className="size-20 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20 shadow-[0_0_30px_#38ff1411]">
+                <span className="material-symbols-outlined text-4xl text-primary/40">sports_soccer</span>
+            </div>
+            <div className="max-w-xs space-y-2">
+                <h3 className="text-xl font-extrabold text-white">
+                    {hasFilters ? 'No matches found' : 'No games nearby'}
+                </h3>
+                <p className="text-sm text-white/40 leading-relaxed font-bold">
+                    {hasFilters
+                        ? 'Try adjusting your filters to discover more football matches in your area.'
+                        : 'Be the one who kicks things off! Create a match and invite players to join you.'}
+                </p>
+            </div>
+            {hasFilters ? (
+                <button
+                    onClick={onClear}
+                    className="px-6 py-2.5 rounded-full bg-white/5 border border-white/10 text-[11px] font-extrabold uppercase tracking-widest text-white/60 hover:text-white hover:bg-white/10 transition-all active:scale-95"
+                >
+                    Clear All Filters
+                </button>
+            ) : (
+                <button
+                    onClick={() => navigate('/matches/create')}
+                    className="px-8 py-3 rounded-full bg-primary text-background text-xs font-extrabold uppercase tracking-widest shadow-[0_0_20px_#38ff1444] transition-all active:scale-95"
+                >
+                    Create a Match
+                </button>
+            )}
+        </div>
+    );
+
+    // Filter Navigation
     const setTab = (tab) => {
+        haptics.light();
         setSearchParams({ tab });
         lastDocRef.current = null;
     };
@@ -206,12 +215,10 @@ export function MatchFeed() {
         }
     }, [buildQuery, format, skillLevel, timeFilter, sortBy, currentTab]);
 
-    // Refetch when filters change
     useEffect(() => {
         fetchMatches(true);
-    }, [format, skillLevel, timeFilter, sortBy]);
+    }, [format, skillLevel, timeFilter, sortBy, currentTab, fetchMatches]);
 
-    // Infinite scroll observer
     useEffect(() => {
         if (!loaderRef.current) return;
         const observer = new IntersectionObserver(
@@ -234,171 +241,211 @@ export function MatchFeed() {
     };
 
     return (
-        <div className="p-6 pb-32 space-y-6">
-            {/* Header */}
-            <div className="flex justify-between items-start">
-                <div>
-                    <h2 className="text-3xl font-condensed">Pitch Hub</h2>
-                    <div className="flex gap-4 mt-2">
-                        <button
-                            onClick={() => setTab('matches')}
-                            className={`text-xs font-bold uppercase tracking-widest pb-1 border-b-2 transition-all ${currentTab === 'matches' ? 'text-primary border-primary' : 'text-white/20 border-transparent'
-                                }`}
-                        >
-                            Matches
-                        </button>
-                        <button
-                            onClick={() => setTab('requests')}
-                            className={`text-xs font-bold uppercase tracking-widest pb-1 border-b-2 transition-all ${currentTab === 'requests' ? 'text-primary border-primary' : 'text-white/20 border-transparent'
-                                }`}
-                        >
-                            Requests
-                        </button>
-                    </div>
-                </div>
-                <div className="flex items-center gap-2">
-                    <button
-                        onClick={() => navigate(currentTab === 'matches' ? '/matches/create' : '/matches/request')}
-                        className="flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-bold uppercase tracking-wider bg-primary text-background hover:bg-primary/80 transition-colors shadow-[0_0_15px_rgba(57,255,20,0.3)]"
-                    >
-                        <Plus size={14} /> {currentTab === 'matches' ? 'Match' : 'Post'}
-                    </button>
-                    <button
-                        onClick={() => setShowFilters(v => !v)}
-                        className={`flex items-center gap-2 px-3 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all ${showFilters || hasFilters
-                            ? 'bg-white/10 text-white'
-                            : 'bg-white/5 text-white/50 hover:bg-white/10'
-                            }`}
-                    >
-                        <SlidersHorizontal size={14} />
-                        {hasFilters && (
-                            <span className="w-1.5 h-1.5 bg-primary rounded-full ms-1" />
-                        )}
-                    </button>
-                </div>
+        <div className="flex flex-col min-h-screen bg-background text-white font-display">
+            {/* DEBUG MARKER - Visible if component renders */}
+            <div className="fixed top-0 left-0 z-[9999] bg-primary text-background text-[10px] font-bold px-2 py-1">
+                Pitch Hub Loaded
             </div>
 
-            {/* Filter Panel */}
-            <AnimatePresence>
-                {showFilters && (
-                    <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="overflow-hidden"
-                    >
-                        <div className="bg-secondary/40 border border-white/5 rounded-3xl p-5 space-y-4">
-                            {/* Format */}
-                            <div>
-                                <p className="text-white/30 text-[10px] font-bold uppercase tracking-widest mb-2 flex items-center gap-1.5">
-                                    <Users size={10} /> Format
-                                </p>
-                                <div className="flex gap-2 flex-wrap">
-                                    {FORMATS.map(f => (
-                                        <FilterChip key={f} label={f} active={format === f} onClick={() => setFormat(f)} />
-                                    ))}
-                                </div>
-                            </div>
-                            {/* Skill Level */}
-                            <div>
-                                <p className="text-white/30 text-[10px] font-bold uppercase tracking-widest mb-2 flex items-center gap-1.5">
-                                    <Zap size={10} /> Skill Level
-                                </p>
-                                <div className="flex gap-2 flex-wrap">
-                                    {SKILL_LEVELS.map(s => (
-                                        <FilterChip key={s} label={s} active={skillLevel === s} onClick={() => setSkillLevel(s)} />
-                                    ))}
-                                </div>
-                            </div>
-                            {/* Time */}
-                            <div>
-                                <p className="text-white/30 text-[10px] font-bold uppercase tracking-widest mb-2 flex items-center gap-1.5">
-                                    <Clock size={10} /> When
-                                </p>
-                                <div className="flex gap-2 flex-wrap">
-                                    {TIME_FILTERS.map(t => (
-                                        <FilterChip key={t} label={t} active={timeFilter === t} onClick={() => setTimeFilter(t)} />
-                                    ))}
-                                </div>
-                            </div>
-                            {/* Sort */}
-                            <div>
-                                <p className="text-white/30 text-[10px] font-bold uppercase tracking-widest mb-2">Sort By</p>
-                                <div className="flex gap-2">
-                                    {SORT_OPTIONS.map(s => (
-                                        <FilterChip key={s.value} label={s.label} active={sortBy === s.value} onClick={() => setSortBy(s.value)} />
-                                    ))}
-                                </div>
-                            </div>
-                            {hasFilters && (
-                                <button
-                                    onClick={clearFilters}
-                                    className="flex items-center gap-1.5 text-white/30 text-xs font-bold uppercase hover:text-white transition-colors"
-                                >
-                                    <X size={12} /> Clear All
-                                </button>
+            {/* Header */}
+            <header className="sticky top-0 z-30 bg-background/80 backdrop-blur-md px-4 pt-6 pb-2">
+                <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-3">
+                        <div className="size-10 rounded-full bg-primary/20 flex items-center justify-center border border-primary/30 overflow-hidden shadow-[0_0_10px_rgba(56,255,20,0.2)]">
+                            {currentUser?.photoURL ? (
+                                <img
+                                    src={currentUser.photoURL}
+                                    alt="Profile"
+                                    className="w-full h-full object-cover"
+                                />
+                            ) : (
+                                <span className="material-symbols-outlined text-primary text-xl">person</span>
                             )}
                         </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-
-            {/* Error State */}
-            {error && (
-                <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-4 text-center">
-                    <p className="text-red-400 text-sm font-bold">{error}</p>
+                        <div>
+                            <h1 className="text-lg font-extrabold leading-none tracking-tight">Pitch Hub</h1>
+                            <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest mt-0.5">London, UK</p>
+                        </div>
+                    </div>
                     <button
-                        onClick={() => fetchMatches(true)}
-                        className="text-primary text-xs font-bold uppercase mt-2 hover:underline"
+                        onClick={() => setShowFilters(v => !v)}
+                        className={`size-10 rounded-full flex items-center justify-center transition-all ${showFilters || hasFilters
+                            ? 'bg-primary text-background shadow-[0_0_15px_#38ff14]'
+                            : 'bg-white/5 border border-white/10 text-white/40 hover:text-white'
+                            }`}
                     >
-                        Retry
+                        <span className="material-symbols-outlined text-xl">tune</span>
                     </button>
                 </div>
-            )}
 
-            {/* Feed List */}
-            <div className="grid gap-4">
-                {loading ? (
-                    Array.from({ length: 3 }).map((_, i) => <MatchSkeleton key={i} />)
-                ) : (currentTab === 'matches' ? matches : requests).length === 0 ? (
-                    <EmptyState hasFilters={hasFilters} onClear={clearFilters} />
-                ) : (
-                    <AnimatePresence mode="popLayout">
-                        {(currentTab === 'matches' ? matches : requests).map((item, i) => (
-                            <motion.div
-                                key={item.id}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: i < 3 ? i * 0.05 : 0 }}
-                            >
-                                {currentTab === 'matches' ? (
-                                    <MatchCard
-                                        {...item}
-                                        joined={item.joined_players?.length || 0}
-                                    />
-                                ) : (
-                                    <RequestCard
-                                        request={item}
-                                    />
-                                )}
-                            </motion.div>
-                        ))}
-                    </AnimatePresence>
-                )}
-            </div>
-
-            {/* Infinite scroll sentinel */}
-            {!loading && hasMore && (
-                <div ref={loaderRef} className="flex justify-center py-4">
-                    {loadingMore && <Loader2 size={24} className="animate-spin text-primary" />}
+                {/* Segmented Control */}
+                <div className="flex p-1 bg-white/5 rounded-full mb-4 border border-white/5">
+                    <button
+                        onClick={() => setTab('matches')}
+                        className={`flex-1 py-2 text-sm font-bold rounded-full transition-all ${currentTab === 'matches'
+                            ? 'bg-primary text-background shadow-lg scale-[1.02]'
+                            : 'text-white/40 hover:text-white'
+                            }`}
+                    >
+                        Matches
+                    </button>
+                    <button
+                        onClick={() => setTab('requests')}
+                        className={`flex-1 py-2 text-sm font-bold rounded-full transition-all ${currentTab === 'requests'
+                            ? 'bg-primary text-background shadow-lg scale-[1.02]'
+                            : 'text-white/40 hover:text-white'
+                            }`}
+                    >
+                        Requests
+                    </button>
                 </div>
-            )}
 
-            {!loading && !hasMore && (currentTab === 'matches' ? matches : requests).length > 0 && (
-                <p className="text-center text-white/20 text-xs font-bold uppercase tracking-widest py-4">
-                    You've seen all {currentTab}
-                </p>
-            )}
+                {/* Active Filter Bar (Horizontal Scroll) */}
+                <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-2">
+                    <button
+                        onClick={() => setShowFilters(true)}
+                        className={`flex shrink-0 items-center gap-1.5 px-4 py-2 rounded-full text-[10px] font-extrabold uppercase tracking-wider transition-all ${format !== 'All' ? 'bg-primary/20 border border-primary/40 text-primary' : 'bg-white/5 border border-white/10 text-white/40'}`}
+                    >
+                        Format: {format} <span className="material-symbols-outlined text-xs">expand_more</span>
+                    </button>
+                    <button
+                        onClick={() => setShowFilters(true)}
+                        className={`flex shrink-0 items-center gap-1.5 px-4 py-2 rounded-full text-[10px] font-extrabold uppercase tracking-wider transition-all ${skillLevel !== 'All' ? 'bg-primary/20 border border-primary/40 text-primary' : 'bg-white/5 border border-white/10 text-white/40'}`}
+                    >
+                        Skill: {skillLevel} <span className="material-symbols-outlined text-xs">expand_more</span>
+                    </button>
+                    <button
+                        onClick={() => setShowFilters(true)}
+                        className={`flex shrink-0 items-center gap-1.5 px-4 py-2 rounded-full text-[10px] font-extrabold uppercase tracking-wider transition-all ${timeFilter !== 'All' ? 'bg-primary/20 border border-primary/40 text-primary' : 'bg-white/5 border border-white/10 text-white/40'}`}
+                    >
+                        Time: {timeFilter} <span className="material-symbols-outlined text-xs">expand_more</span>
+                    </button>
+                </div>
+            </header>
+
+            <main className="flex-1 px-4 py-4 space-y-4">
+                {/* Filter Panel */}
+                <AnimatePresence>
+                    {showFilters && (
+                        <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            className="overflow-hidden"
+                        >
+                            <div className="bg-secondary/40 border border-white/5 rounded-3xl p-5 space-y-4">
+                                <div>
+                                    <p className="text-white/30 text-[10px] font-bold uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                                        <Users size={10} /> Format
+                                    </p>
+                                    <div className="flex gap-2 flex-wrap">
+                                        {FORMATS.map(f => (
+                                            <FilterChip key={`format-${f}`} label={f} active={format === f} onClick={() => { haptics.light(); setFormat(f); }} />
+                                        ))}
+                                    </div>
+                                </div>
+                                <div>
+                                    <p className="text-white/30 text-[10px] font-bold uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                                        <Zap size={10} /> Skill Level
+                                    </p>
+                                    <div className="flex gap-2 flex-wrap">
+                                        {SKILL_LEVELS.map(s => (
+                                            <FilterChip key={`skill-${s}`} label={s} active={skillLevel === s} onClick={() => { haptics.light(); setSkillLevel(s); }} />
+                                        ))}
+                                    </div>
+                                </div>
+                                <div>
+                                    <p className="text-white/30 text-[10px] font-bold uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                                        <Clock size={10} /> When
+                                    </p>
+                                    <div className="flex gap-2 flex-wrap">
+                                        {TIME_FILTERS.map(t => (
+                                            <FilterChip key={`time-${t}`} label={t} active={timeFilter === t} onClick={() => { haptics.light(); setTimeFilter(t); }} />
+                                        ))}
+                                    </div>
+                                </div>
+                                <div>
+                                    <p className="text-white/30 text-[10px] font-bold uppercase tracking-widest mb-2">Sort By</p>
+                                    <div className="flex gap-2">
+                                        {SORT_OPTIONS.map(s => (
+                                            <FilterChip key={`sort-${s.value}`} label={s.label} active={sortBy === s.value} onClick={() => { haptics.light(); setSortBy(s.value); }} />
+                                        ))}
+                                    </div>
+                                </div>
+                                {hasFilters && (
+                                    <button
+                                        onClick={() => { haptics.medium(); clearFilters(); }}
+                                        className="flex items-center gap-1.5 text-white/30 text-xs font-bold uppercase hover:text-white transition-colors"
+                                    >
+                                        <X size={12} /> Clear All
+                                    </button>
+                                )}
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
+                {/* Error State */}
+                {error && (
+                    <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-4 text-center">
+                        <p className="text-red-400 text-sm font-bold">{error}</p>
+                        <button
+                            onClick={() => fetchMatches(true)}
+                            className="text-primary text-xs font-bold uppercase mt-2 hover:underline"
+                        >
+                            Retry
+                        </button>
+                    </div>
+                )}
+
+                {/* List Body */}
+                <div>
+                    {loading ? (
+                        <div className="grid gap-4">
+                            {[1, 2, 3].map((i) => <MatchSkeleton key={`skel-main-${i}`} />)}
+                        </div>
+                    ) : (currentTab === 'matches' ? matches : requests).length === 0 ? (
+                        <EmptyState hasFilters={hasFilters} onClear={clearFilters} />
+                    ) : (
+                        <MotionList className="grid gap-4">
+                            {(currentTab === 'matches' ? matches : requests).map((item) => (
+                                <div key={item.id}>
+                                    {currentTab === 'matches' ? (
+                                        <MatchCard
+                                            {...item}
+                                            joined={item.joined_players?.length || 0}
+                                        />
+                                    ) : (
+                                        <RequestCard
+                                            request={item}
+                                        />
+                                    )}
+                                </div>
+                            ))}
+                        </MotionList>
+                    )}
+                </div>
+
+                {/* Sentinel */}
+                {!loading && hasMore && (
+                    <div ref={loaderRef} className="flex justify-center py-4">
+                        {loadingMore && <Loader2 size={24} className="animate-spin text-primary" />}
+                    </div>
+                )}
+
+                {!loading && !hasMore && (currentTab === 'matches' ? matches : requests).length > 0 && (
+                    <p className="text-center text-white/20 text-xs font-bold uppercase tracking-widest py-4">
+                        You've seen all {currentTab}
+                    </p>
+                )}
+            </main>
+
+            <button
+                onClick={() => navigate(currentTab === 'matches' ? '/matches/create' : '/matches/request')}
+                className="fixed bottom-24 right-6 z-40 size-16 rounded-full bg-primary text-background flex items-center justify-center shadow-[0_8px_32px_rgba(56,255,20,0.4)] transition-transform active:scale-95 group"
+            >
+                <span className="material-symbols-outlined text-3xl font-bold group-hover:rotate-90 transition-transform">add</span>
+            </button>
         </div>
     );
 }

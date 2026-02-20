@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from "framer-motion";
+// import { motion, AnimatePresence } from "framer-motion";
 import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
 import { db } from "../lib/firebase";
 import { PostComposer } from "./PostComposer";
@@ -47,29 +47,25 @@ export function PitchSideFeed({ onNavigateToProfile }) {
                 </div>
             ) : (
                 <div className="space-y-2">
-                    <AnimatePresence mode="popLayout">
-                        {posts.length === 0 ? (
-                            <motion.div
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                className="text-center py-20 px-10 border-2 border-dashed border-white/5 rounded-[40px]"
-                            >
-                                <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <MessageSquare className="text-white/20" size={32} />
-                                </div>
-                                <h3 className="text-white/60 font-bold mb-2">The pitch is quiet...</h3>
-                                <p className="text-white/30 text-sm">Be the first to share an update from the game!</p>
-                            </motion.div>
-                        ) : (
-                            posts.map((post) => (
-                                <PostCard
-                                    key={post.id}
-                                    post={post}
-                                    onProfileClick={onNavigateToProfile}
-                                />
-                            ))
-                        )}
-                    </AnimatePresence>
+                    {posts.length === 0 ? (
+                        <div
+                            className="text-center py-20 px-10 border-2 border-dashed border-white/5 rounded-[40px]"
+                        >
+                            <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <MessageSquare className="text-white/20" size={32} />
+                            </div>
+                            <h3 className="text-white/60 font-bold mb-2">The pitch is quiet...</h3>
+                            <p className="text-white/30 text-sm">Be the first to share an update from the game!</p>
+                        </div>
+                    ) : (
+                        posts.map((post) => (
+                            <PostCard
+                                key={post.id}
+                                post={post}
+                                onProfileClick={onNavigateToProfile}
+                            />
+                        ))
+                    )}
                 </div>
             )}
         </div>

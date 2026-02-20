@@ -1,11 +1,12 @@
 import { MapPin, Clock, Users, Loader2, Check, Shield, ChevronRight } from "lucide-react";
-import { motion } from "framer-motion";
+// import { motion } from "framer-motion";
 import { Button } from "./Button";
 import { useAuth } from "../contexts/AuthContext";
 import { doc, runTransaction, arrayUnion, arrayRemove } from "firebase/firestore";
 import { db } from "../lib/firebase";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { haptics } from "../utils/haptics";
 
 export function MatchCard({
     id,
@@ -31,6 +32,7 @@ export function MatchCard({
 
     const handleJoinToggle = async () => {
         if (!currentUser) return;
+        haptics.medium();
         setLoading(true);
         try {
             const matchRef = doc(db, 'matches', id);
@@ -44,11 +46,13 @@ export function MatchCard({
                         joined_players: arrayRemove(currentUser.uid),
                         spotsLeft: data.capacity - players.length + 1,
                     });
+                    haptics.light();
                 } else if (players.length < data.capacity) {
                     tx.update(matchRef, {
                         joined_players: arrayUnion(currentUser.uid),
                         spotsLeft: data.capacity - players.length - 1,
                     });
+                    haptics.success();
                 }
             });
         } catch (error) {
@@ -58,92 +62,99 @@ export function MatchCard({
         }
     };
 
+    const spotsRemaining = capacity - joined;
+    const spotsColor = spotsRemaining > 1 ? 'bg-primary' : spotsRemaining === 1 ? 'bg-amber-500' : 'bg-red-500';
+
     return (
-        <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="bg-secondary/50 border border-white/10 rounded-3xl p-6 hover:border-primary/30 transition-colors group relative overflow-hidden"
-        >
-            <div className="flex justify-between items-start mb-4">
-                <div className="flex-1 min-w-0">
-                    <h3 className="text-xl font-condensed group-hover:text-primary transition-colors truncate">{title}</h3>
-                    <div className="flex items-center gap-2 text-white/40 text-sm mt-1">
-                        <MapPin size={14} />
-                        <span className="truncate">{location}</span>
-                    </div>
-                    <div className="flex items-center gap-2 mt-2 flex-wrap">
-                        {format && (
-                            <span className="px-2 py-0.5 bg-white/5 rounded-full text-[10px] font-bold text-white/40 uppercase">{format}</span>
-                        )}
-                        {skillLevel && (
-                            <span className="px-2 py-0.5 bg-primary/10 rounded-full text-[10px] font-bold text-primary uppercase flex items-center gap-1">
-                                <Shield size={8} />{skillLevel}
-                            </span>
-                        )}
-                    </div>
-                </div>
-                <div className={`ml-3 flex-shrink-0 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider
-          ${isJoined ? 'bg-primary text-background' : 'bg-primary/10 text-primary'}`}>
-                    {isJoined ? 'Joined' : `${capacity - joined} Left`}
-                </div>
-            </div>
-
-            <div className="flex gap-6 mb-6">
-                <div className="flex items-center gap-2 text-white/60 text-sm">
-                    <Clock size={14} className="text-primary" />
-                    <span>{kickoffTime ? new Date(kickoffTime).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' }) : time}</span>
-                </div>
-                <div className="flex items-center gap-2 text-white/60 text-sm">
-                    <Users size={14} className="text-primary" />
-                    <span>{joined}/{capacity}</span>
-                </div>
-            </div>
-
-            <div className="space-y-2 mb-6">
-                <div className="flex justify-between items-end text-xs mb-1">
-                    <span className="text-white/40 font-bold uppercase">Players Joined</span>
-                    <div className="flex items-center gap-2">
-                        {isJoined && <Check size={14} className="text-primary" />}
-                        <span className="text-white font-bold">{joined}<span className="text-white/40 ml-1">/ {capacity}</span></span>
-                    </div>
-                </div>
-                <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
-                    <motion.div
-                        animate={{ width: `${progress}%` }}
-                        transition={{ duration: 0.5, ease: "easeOut" }}
-                        className="h-full bg-primary"
-                        style={{ boxShadow: '0 0 10px #39FF14' }}
-                    />
-                </div>
-            </div>
-
-            <div className="flex gap-2">
-                <Button
-                    onClick={handleJoinToggle}
-                    disabled={loading || (isFull && !isJoined) || status === 'locked' || status === 'canceled'}
-                    variant={isJoined ? "outline" : "primary"}
-                    className="flex-1 flex justify-center items-center gap-2"
-                >
-                    {loading && <Loader2 size={18} className="animate-spin" />}
-                    {status === 'locked' ? 'LOCKED' : isJoined ? 'LEAVE' : isFull ? 'FULL' : 'JOIN'}
-                </Button>
-                <button
-                    onClick={() => navigate(`/matches/${id}`)}
-                    className="flex items-center justify-center w-10 h-10 rounded-2xl bg-white/5 hover:bg-white/10 transition-colors border border-white/5"
-                >
-                    <ChevronRight size={18} className="text-white/40" />
-                </button>
-            </div>
-
-            {/* Decorative pulse if joined */}
-            {isJoined && (
-                <motion.div
-                    animate={{ opacity: [0, 0.2, 0] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                    className="absolute inset-0 bg-primary pointer-events-none"
+        <div className="glass-card rounded-2xl overflow-hidden flex flex-col transition-all active:scale-[0.98] group">
+            {/* Image Section */}
+            <div className="relative h-48 w-full">
+                <img
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    src={`https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&q=80&w=800`}
+                    alt={title}
                 />
-            )}
-        </motion.div>
+                <div className="absolute inset-0 bg-gradient-to-t from-background-dark/80 to-transparent opacity-60" />
+
+                <div className="absolute top-3 left-3 flex gap-2">
+                    {format && (
+                        <span className="px-2 py-1 rounded bg-black/60 backdrop-blur-md text-[10px] font-extrabold text-primary uppercase tracking-wider">
+                            {format} Format
+                        </span>
+                    )}
+                    {skillLevel && (
+                        <span className="px-2 py-1 rounded bg-black/60 backdrop-blur-md text-[10px] font-extrabold text-white uppercase tracking-wider">
+                            {skillLevel}
+                        </span>
+                    )}
+                </div>
+
+                <div className={`absolute bottom-3 right-3 ${spotsColor} px-3 py-1 rounded-full text-background text-[11px] font-extrabold shadow-lg`}>
+                    {spotsRemaining === 0 ? 'FULL' : `${spotsRemaining} SPOTS LEFT`}
+                </div>
+            </div>
+
+            {/* Content Section */}
+            <div className="p-4 bg-white/[0.02]">
+                <div className="flex justify-between items-start mb-2">
+                    <div className="flex-1 min-w-0">
+                        <h3 className="text-lg font-extrabold dark:text-white leading-tight truncate group-hover:text-primary transition-colors">
+                            {title}
+                        </h3>
+                        <p className="text-sm text-white/40 flex items-center gap-1 mt-1 truncate">
+                            <span className="material-symbols-outlined text-sm text-primary">location_on</span>
+                            {location}
+                        </p>
+                    </div>
+                    <div className="text-right ml-4">
+                        <p className="text-lg font-extrabold text-primary">£8.50</p>
+                        <p className="text-[10px] uppercase font-bold text-white/20 leading-none">per person</p>
+                    </div>
+                </div>
+
+                {/* Footer / Action */}
+                <div className="flex items-center justify-between mt-4 pt-4 border-t border-white/5">
+                    <div className="flex items-center gap-3">
+                        <div className="flex -space-x-2">
+                            {/* Joined Players Avatars (Mock for now or map real ones if available) */}
+                            {Array.from({ length: Math.min(joined, 3) }).map((_, i) => (
+                                <div key={i} className="size-7 rounded-full border-2 border-background bg-secondary flex items-center justify-center overflow-hidden">
+                                    <span className="material-symbols-outlined text-[14px] text-white/20">person</span>
+                                </div>
+                            ))}
+                            {joined > 3 && (
+                                <div className="size-7 rounded-full border-2 border-background bg-white/5 flex items-center justify-center text-[10px] font-extrabold text-white/60">
+                                    +{joined - 3}
+                                </div>
+                            )}
+                        </div>
+                        <span className="text-xs text-white/40 font-bold tracking-tight">
+                            {kickoffTime ? new Date(kickoffTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : time}
+                        </span>
+                    </div>
+
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            handleJoinToggle();
+                        }}
+                        disabled={loading || (isFull && !isJoined) || status === 'locked' || status === 'canceled'}
+                        className={`px-6 py-2 rounded-full text-sm font-extrabold transition-all active:scale-95 ${isJoined
+                                ? 'bg-white/5 border border-white/10 text-white/60 hover:text-white'
+                                : 'bg-primary text-background shadow-[0_0_20px_#38ff1444] hover:shadow-[0_0_25px_#38ff1466]'
+                            }`}
+                    >
+                        {loading ? '...' : isJoined ? 'Leave' : 'Join'}
+                    </button>
+                </div>
+            </div>
+
+            {/* Click area for details */}
+            <div
+                className="absolute inset-0 cursor-pointer pointer-events-none"
+                onClick={() => navigate(`/matches/${id}`)}
+                style={{ pointerEvents: 'auto' }}
+            />
+        </div>
     );
 }

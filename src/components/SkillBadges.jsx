@@ -1,5 +1,5 @@
 import { Award, ShieldCheck, Flame, Star, Target, Crown, Zap, Heart } from "lucide-react";
-import { motion } from "framer-motion";
+// import { motion } from "framer-motion";
 
 // Badge definitions — these mirror the badgeDefinitions Firestore collection
 const BADGE_DEFS = {
@@ -27,11 +27,8 @@ function LockedBadge({ def }) {
 
 function EarnedBadge({ def }) {
     return (
-        <motion.div
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            whileHover={{ scale: 1.05 }}
-            className="flex-shrink-0 flex flex-col items-center gap-2 bg-secondary/50 border border-white/10 rounded-2xl p-4 w-24 group relative"
+        <div
+            className="flex-shrink-0 flex flex-col items-center gap-2 bg-secondary/50 border border-white/10 rounded-2xl p-4 w-24 group relative hover:scale-105 transition-all duration-300"
             title={def.desc}
         >
             <div className={`p-2 rounded-full bg-white/5 ${def.color} group-hover:scale-110 transition-transform`}>
@@ -42,7 +39,7 @@ function EarnedBadge({ def }) {
             <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-black border border-white/10 rounded-lg px-2 py-1 text-[9px] text-white/60 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
                 {def.desc}
             </div>
-        </motion.div>
+        </div>
     );
 }
 

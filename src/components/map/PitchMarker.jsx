@@ -1,17 +1,27 @@
 import React from 'react';
 import { MapPin } from 'lucide-react';
 
-export function PitchMarker({ name, onClick }) {
+export function PitchMarker({ pitch, active, onClick }) {
     return (
         <button
-            onClick={onClick}
+            onClick={(e) => {
+                e.stopPropagation();
+                onClick();
+            }}
             className="group relative flex flex-col items-center gap-1 transition-transform hover:scale-110 active:scale-95"
         >
-            <div className="bg-background border-2 border-primary p-2 rounded-2xl shadow-[0_0_15px_rgba(57,255,20,0.3)] transition-colors group-hover:bg-primary group-hover:text-background text-primary">
-                <MapPin size={20} fill="currentColor" fillOpacity={0.2} />
+            <div className={`
+                p-2 rounded-2xl shadow-lg transition-all duration-300
+                ${active
+                    ? 'bg-primary text-background scale-110 shadow-[0_0_20px_#39FF14]'
+                    : 'bg-background border-2 border-primary/40 text-primary hover:border-primary/80'}
+            `}>
+                <MapPin size={active ? 24 : 20} fill="currentColor" fillOpacity={active ? 0.4 : 0.2} />
             </div>
-            <div className="px-2 py-0.5 bg-black/80 backdrop-blur-md rounded-full border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                <span className="text-[10px] font-bold text-white uppercase whitespace-nowrap">{name}</span>
+
+            {/* Tooltip on hover */}
+            <div className="absolute -top-10 px-3 py-1 bg-black/90 backdrop-blur-md rounded-xl border border-white/10 opacity-0 group-hover:opacity-100 transition-all pointer-events-none -translate-y-2 group-hover:translate-y-0">
+                <span className="text-[10px] font-bold text-white uppercase whitespace-nowrap tracking-wider">{pitch.name}</span>
             </div>
         </button>
     );

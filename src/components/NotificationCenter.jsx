@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+// import { motion, AnimatePresence } from 'framer-motion';
 import {
     Bell, X, Info, CheckCircle2, AlertTriangle,
     Calendar, Users, MessageSquare, Trash2
@@ -64,21 +64,14 @@ export function NotificationCenter({ isOpen, onClose }) {
     const unreadCount = notifications.filter(n => !n.read).length;
 
     return (
-        <AnimatePresence>
+        <>
             {isOpen && (
                 <>
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
+                    <div
                         onClick={onClose}
                         className="fixed inset-0 bg-background/80 backdrop-blur-sm z-[100]"
                     />
-                    <motion.div
-                        initial={{ x: '100%' }}
-                        animate={{ x: 0 }}
-                        exit={{ x: '100%' }}
-                        transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                    <div
                         className="fixed inset-y-0 right-0 w-full max-w-sm bg-secondary border-l border-white/5 z-[101] flex flex-col shadow-2xl"
                     >
                         {/* Header */}
@@ -114,12 +107,10 @@ export function NotificationCenter({ isOpen, onClose }) {
                         <div className="flex-1 overflow-y-auto p-4 space-y-3">
                             {loading ? (
                                 <div className="h-full flex items-center justify-center">
-                                    <motion.div
-                                        animate={{ rotate: 360 }}
-                                        transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
+                                    <div
                                     >
                                         <Bell size={24} className="text-white/10" />
-                                    </motion.div>
+                                    </div>
                                 </div>
                             ) : notifications.length === 0 ? (
                                 <div className="h-full flex flex-col items-center justify-center text-center p-8 opacity-20">
@@ -129,14 +120,12 @@ export function NotificationCenter({ isOpen, onClose }) {
                                 </div>
                             ) : (
                                 notifications.map((n) => (
-                                    <motion.div
+                                    <div
                                         key={n.id}
-                                        initial={{ opacity: 0, y: 10 }}
-                                        animate={{ opacity: 1, y: 0 }}
                                         onClick={() => !n.read && markAsRead(n.id)}
                                         className={`p-4 rounded-2xl border transition-all cursor-pointer ${n.read
-                                                ? 'bg-white/5 border-transparent opacity-60'
-                                                : 'bg-white/[0.08] border-white/10 shadow-[0_4px_20px_rgba(0,0,0,0.2)]'
+                                            ? 'bg-white/5 border-transparent opacity-60'
+                                            : 'bg-white/[0.08] border-white/10 shadow-[0_4px_20px_rgba(0,0,0,0.2)]'
                                             }`}
                                     >
                                         <div className="flex gap-3">
@@ -152,13 +141,13 @@ export function NotificationCenter({ isOpen, onClose }) {
                                                 </div>
                                             </div>
                                         </div>
-                                    </motion.div>
+                                    </div>
                                 ))
                             )}
                         </div>
-                    </motion.div>
+                    </div>
                 </>
             )}
-        </AnimatePresence>
+        </>
     );
 }

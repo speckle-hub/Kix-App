@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+// import { motion, AnimatePresence } from 'framer-motion';
 import { Send, Loader2, MessageCircle, X } from 'lucide-react';
 import { useChat } from '../hooks/useChat';
 import { useAuth } from '../contexts/AuthContext';
@@ -78,10 +78,8 @@ export function ChatWindow({ type, id, title, onClose }) {
                     messages.map((msg, i) => {
                         const isMe = msg.senderId === currentUser?.uid;
                         return (
-                            <motion.div
+                            <div
                                 key={msg.id || i}
-                                initial={{ opacity: 0, x: isMe ? 10 : -10 }}
-                                animate={{ opacity: 1, x: 0 }}
                                 className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}
                             >
                                 <div className={`max-w-[80%] ${isMe ? 'items-end' : 'items-start'} flex flex-col`}>
@@ -91,8 +89,8 @@ export function ChatWindow({ type, id, title, onClose }) {
                                         </span>
                                     )}
                                     <div className={`px-4 py-2.5 rounded-2xl text-sm ${isMe
-                                            ? 'bg-primary text-background font-medium rounded-tr-none'
-                                            : 'bg-white/5 text-white rounded-tl-none border border-white/5'
+                                        ? 'bg-primary text-background font-medium rounded-tr-none'
+                                        : 'bg-white/5 text-white rounded-tl-none border border-white/5'
                                         }`}>
                                         {msg.text}
                                     </div>
@@ -100,7 +98,7 @@ export function ChatWindow({ type, id, title, onClose }) {
                                         {msg.createdAt?.toDate ? new Date(msg.createdAt.toDate()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Sending...'}
                                     </span>
                                 </div>
-                            </motion.div>
+                            </div>
                         );
                     })
                 )}
@@ -123,8 +121,8 @@ export function ChatWindow({ type, id, title, onClose }) {
                         type="submit"
                         disabled={!inputText.trim() || sending}
                         className={`p-3 rounded-full transition-all ${inputText.trim() && !sending
-                                ? 'bg-primary text-background'
-                                : 'bg-white/5 text-white/20'
+                            ? 'bg-primary text-background'
+                            : 'bg-white/5 text-white/20'
                             }`}
                     >
                         {sending ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}

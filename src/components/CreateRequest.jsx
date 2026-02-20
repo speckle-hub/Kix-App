@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { collection, addDoc, query, where, getDocs, serverTimestamp } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuth } from '../contexts/AuthContext';
-import { motion } from 'framer-motion';
+// import { motion } from 'framer-motion';
 import { ArrowLeft, Loader2, MapPin, Clock, Users, Zap } from 'lucide-react';
 import { Button } from './Button';
 
@@ -89,11 +89,7 @@ export function CreateRequest() {
     const minPlayers = form.format === '5v5' ? 10 : form.format === '7v7' ? 14 : 22;
 
     return (
-        <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="p-6 pb-32 space-y-6"
-        >
+        <div className="p-6 pb-32 space-y-6">
             {/* Header */}
             <div className="flex items-center gap-4">
                 <button onClick={() => navigate(-1)} className="p-2 rounded-full bg-white/5 hover:bg-white/10 transition-colors">
@@ -152,8 +148,8 @@ export function CreateRequest() {
                                 key={f} type="button"
                                 onClick={() => set('format', f)}
                                 className={`flex-1 py-2.5 rounded-2xl text-sm font-bold uppercase tracking-wider transition-all ${form.format === f
-                                        ? 'bg-primary text-background'
-                                        : 'bg-white/5 text-white/40 hover:bg-white/10'
+                                    ? 'bg-primary text-background'
+                                    : 'bg-white/5 text-white/40 hover:bg-white/10'
                                     }`}
                             >
                                 {f}
@@ -174,8 +170,8 @@ export function CreateRequest() {
                                 key={s} type="button"
                                 onClick={() => set('skillLevel', s)}
                                 className={`px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all ${form.skillLevel === s
-                                        ? 'bg-primary text-background'
-                                        : 'bg-white/5 text-white/40 hover:bg-white/10'
+                                    ? 'bg-primary text-background'
+                                    : 'bg-white/5 text-white/40 hover:bg-white/10'
                                     }`}
                             >
                                 {s}
@@ -212,6 +208,6 @@ export function CreateRequest() {
                     POST REQUEST
                 </Button>
             </form>
-        </motion.div>
+        </div>
     );
 }

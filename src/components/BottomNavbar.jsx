@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { LayoutGrid, Users, MessageSquare, User, Newspaper, Map as MapIcon } from "lucide-react";
 import { motion } from "framer-motion";
 import { useNavigate, useLocation } from "react-router-dom";
+import { haptics } from '../utils/haptics';
 
 const navItems = [
     { icon: LayoutGrid, label: "Matches", id: "matches", path: "/matches" },
@@ -30,18 +31,17 @@ export function BottomNavbar() {
                             key={item.id}
                             onClick={(e) => {
                                 e.stopPropagation(); // Stop bubbling
-                                console.log(`🎯 PORTAL CLICK: ${item.label} (${item.path})`);
+                                haptics.light();
                                 navigate(item.path);
                             }}
-                            className="relative flex items-center justify-center w-12 h-12 rounded-full cursor-pointer focus:outline-none transition-transform active:scale-95 group"
+                            className="relative flex items-center justify-center w-12 h-12 rounded-full cursor-pointer focus:outline-none group"
                             style={{ WebkitTapHighlightColor: "transparent" }}
                         >
                             {isActive && (
                                 <motion.div
-                                    layoutId="activeTabBackground"
+                                    layoutId="navTab"
                                     className="absolute inset-0 bg-primary/20 rounded-full"
-                                    initial={false}
-                                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                                 />
                             )}
 
@@ -53,9 +53,9 @@ export function BottomNavbar() {
 
                             {isActive && (
                                 <motion.div
-                                    layoutId="activeTabDot"
+                                    layoutId="navIndicator"
                                     className="absolute bottom-1.5 w-1 h-1 bg-primary rounded-full shadow-[0_0_8px_#39FF14]"
-                                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                                 />
                             )}
                         </button>
