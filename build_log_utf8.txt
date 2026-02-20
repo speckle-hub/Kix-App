@@ -1,0 +1,43 @@
+﻿
+> kix@0.0.0 build
+> vite build
+
+npm : [33mYou are 
+using Node.js 
+20.10.0. Vite 
+requires Node.js 
+version 20.19+ or 
+22.12+. Please 
+upgrade your Node.js 
+version.[39m
+At line:1 char:1
++ npm run build > 
+build_log.txt 2>&1
++ ~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~
+    + CategoryInfo    
+          : NotSpeci  
+  fied: ([33mYou a   
+ re us...s version    
+.[39m:String) []    
+, RemoteException
+    + FullyQualifiedE 
+   rrorId : NativeCo  
+  mmandError
+ 
+[36mvite v7.3.1 [32mbuilding client environment for production...[36m[39m
+transforming...
+[32mΓ£ô[39m 2190 modules transformed.
+rendering chunks...
+computing gzip size...
+[2mdist/[22m[32mindex.html                          [39m[1m[2m    2.34 kB[22m[1m[22m[2m Γöé gzip:   0.94 kB[22m
+[2mdist/[22m[35massets/index-b5OPYHc_.css           [39m[1m[2m   46.33 kB[22m[1m[22m[2m Γöé gzip:   7.58 kB[22m
+[2mdist/[22m[35massets/MapView-BnvqqAnk.css         [39m[1m[2m   69.44 kB[22m[1m[22m[2m Γöé gzip:  10.00 kB[22m
+[2mdist/[22m[36massets/MapView-a5Td4ADf.js          [39m[1m[2m   13.10 kB[22m[1m[22m[2m Γöé gzip:   4.53 kB[22m
+[2mdist/[22m[36massets/vendor-react-CnqyoLdl.js     [39m[1m[2m   47.57 kB[22m[1m[22m[2m Γöé gzip:  16.90 kB[22m
+[2mdist/[22m[36massets/vendor-motion-eKDv8hAG.js    [39m[1m[2m  123.00 kB[22m[1m[22m[2m Γöé gzip:  40.63 kB[22m
+[2mdist/[22m[36massets/vendor-charts-GvJ1JkNj.js    [39m[1m[2m  166.86 kB[22m[1m[22m[2m Γöé gzip:  58.49 kB[22m
+[2mdist/[22m[36massets/index-CYRMGkXK.js            [39m[1m[2m  320.96 kB[22m[1m[22m[2m Γöé gzip:  96.05 kB[22m
+[2mdist/[22m[36massets/vendor-firebase-Z1YhHT9n.js  [39m[1m[2m  356.17 kB[22m[1m[22m[2m Γöé gzip: 109.61 kB[22m
+[2mdist/[22m[36massets/vendor-map-CokiVjiJ.js       [39m[1m[2m1,034.55 kB[22m[1m[22m[2m Γöé gzip: 281.56 kB[22m
+[32mΓ£ô built in 11.40s[39m
